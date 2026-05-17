@@ -274,7 +274,7 @@ Yazılım İşlev Gereksinimleri, talebin tümden gelim (top-down) yaklaşımıy
 **Kod Referansı:**
 > {{IS_MANTIGI_OZETI}}
 >
-> **Kaynak:** `mobilebanking-ios/{{YOL}}` | {{VC_ADI}}, `mobilebanking-android/{{YOL}}` | {{ACTIVITY_ADI}}
+> **Kaynak:** `ios/{{YOL}}` | {{VC_ADI}}, `android/{{YOL}}` | {{ACTIVITY_ADI}}
 
 ##### 4.1.1.2. Batchler
 
@@ -300,9 +300,11 @@ Yazılım İşlev Gereksinimleri, talebin tümden gelim (top-down) yaklaşımıy
 
 **MobileMenuMapping (Pano, NBT, 3D Touch, Spotlight, Pega, Hızlı Erişim):**
 
-| ReferenceID | MenuID | MenuType (1-15) | ParentMenu | TitleKey |
-|--------------|---------|------------------|-------------|-----------|
+| ReferenceID | MenuID | MenuType (1-15; 11 rezerve) | ParentMenu | TitleKey |
+|--------------|---------|-------------------------------|-------------|-----------|
 | {{REF}} | {{ID}} | {{TIP}} | 0/1 | {{KEY}} |
+
+> MenuType 11 rezerve / kullanım dışı (common-rules [C5]).
 
 ##### 4.1.1.5. Erişim Noktaları
 
@@ -353,7 +355,38 @@ Yazılım İşlev Gereksinimleri, talebin tümden gelim (top-down) yaklaşımıy
 
 ##### 4.1.1.10. Servisler
 
-**Yeni / Değişen MCS TransactionName Listesi:**
+> Bu bölüm common-rules [C17] 5 adımlı MCS analiz yöntemiyle doldurulur: VpTransactionConfig (10 kanalı kontrol + diğer kanal fallback) → VpHostCallMappingDetail (parametre listesi) → mwbackend semantic-search (Request/Response model alan kullanımı) → aynı akıştaki çağrı zinciri inferansı.
+
+**Tablo A — Servis Tanım Durumu (TransactionName başına):**
+
+| Alan | Değer | Kaynak |
+|------|-------|--------|
+| TransactionName | `{{TXN}}` | VpTransaction |
+| ChannelID = 10 tanımlı mı? | {{Evet / Hayır — Hayır ise hangi kanaldan input/output alındı}} | VpTransactionConfig |
+| RequestType | `VeriBranch.Common.MessageDefinitions.{{TXN}}Request` | XML Config |
+| ResponseType | `VeriBranch.Common.MessageDefinitions.{{TXN}}Response` | XML Config |
+| HostProcessCode | `{{KOD}}` | VpTransactionAttributes |
+| IsFinancial | {{0/1}} | VpTransaction |
+| Yeni / Mevcut Servis | {{Yeni / Mevcut — Yeni ise mobile-05 script'i çıkacak}} | mobile-02 kararı |
+
+**Tablo B — Input / Output Alanları (VpHostCallMappingDetail + mwbackend kullanım):**
+
+| Yön | Alan Adı | Tip | Zorunlu | mwbackend Kullanım Yeri | Mobil için Anlamı |
+|------|-----------|-----|----------|----------------------------|---------------------|
+| IN | {{ALAN_IN_1}} | {{TIP}} | E/H | `mwbackend/{{Yol}}.cs` | Client'tan gelen veya session'dan alınan |
+| IN | {{ALAN_IN_2}} | {{TIP}} | E/H | {{KULLANIM}} | {{Anlamı}} |
+| OUT | {{ALAN_OUT_1}} | {{TIP}} | — | UseCase Map() → DTO | Client'a dönüyor (ekranda gösterilecek alan) |
+| OUT | {{ALAN_OUT_2}} | {{TIP}} | — | Helper {{Method}} | İş kuralı için kullanılıyor (clienta dönmüyor) |
+
+**Tablo C — Çağrı Zinciri (Aynı Akışta Tetiklenen MCS'ler):**
+
+| Sıra | TransactionName | UseCase / Handler | Karar Koşulu | Yeni mi? |
+|------|------------------|---------------------|---------------|------------|
+| 1 | {{TXN_1}} | `mwbackend/.../{{UseCase}}.cs` | Her zaman | {{Yeni/Mevcut}} |
+| 2 | {{TXN_2}} | `mwbackend/.../{{UseCase}}.cs` | response.HasMore = true | {{Yeni/Mevcut}} |
+| 3 | {{TXN_3}} | `mwbackend/.../{{UseCase}}.cs` | ShortFlow / LongFlow dalı | {{Yeni/Mevcut}} |
+
+**Yeni / Değişen MCS Özet Listesi:**
 
 | Türkçe Servis Adı | TransactionName | Açıklama | Giriş Özü | Çıkış Özü |
 |--------------------|------------------|----------|------------|------------|
@@ -369,13 +402,15 @@ Yazılım İşlev Gereksinimleri, talebin tümden gelim (top-down) yaklaşımıy
 
 **MCS Mapping (VpVeriBranchHostCallMappingView + VpHostCallMappingDetail):** {{MAPPING_PARAGRAFI}}
 
-**Backend Logic (mwbackend DDD — Application + Domain):**
+**Backend Logic (mwbackend DDD — Application + Domain + MCSVeribranchBI + smg):**
 
 > {{IS_MANTIGI_OZETI}}
 >
 > **Kaynak:** `mwbackend/Application/{{Domain}}/UseCase/{{Dosya}}.cs` | {{Handler}}
 > `mwbackend/Application/{{Domain}}/Handler/{{Dosya}}.cs` | {{Method}}
 > `mwbackend/Domain/{{Domain}}/Service/{{Dosya}}.cs` | TransactionNameConstants.{{TXN}}
+> `MCSVeribranchBI/{{Servis}}/{{Dosya}}.cs` | {{MCS_CALL}}
+> `smg/{{Modul}}/{{Dosya}}.cs` | {{FRAMEWORK_CALL}} (framework çağrısı varsa)
 
 ##### 4.1.1.11. Etki Analizi
 

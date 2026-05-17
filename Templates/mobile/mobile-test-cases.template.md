@@ -25,21 +25,21 @@
 
 ## 1. Test Stratejisi ve Kapsam
 
-### 1.1. Kapsam Matrisi (Mobil — Batch YOK)
+### 1.1. Kapsam Matrisi (Mobil — 11 Alt Başlık, common-rules [C5])
 
 | 4.1.Y.x | Başlık | Test Üretildi |
 |---------|--------|----------------|
 | 4.1.Y.1 | Ekran Tasarımı | {{E/H}} |
-| 4.1.Y.2 | Batchler (mobilde yok — N/A) | N/A |
+| 4.1.Y.2 | Batchler | **N/A — mobilde batch yok** |
 | 4.1.Y.3 | Çıktı ve Raporlar | {{E/H}} |
-| 4.1.Y.4 | Menü Tanımları | {{E/H}} |
+| 4.1.Y.4 | Menü Tanımları (Configuration + Validation + Pilot + MinBuild) | {{E/H}} |
 | 4.1.Y.5 | Erişim Noktaları | {{E/H}} |
 | 4.1.Y.6 | SMS / PN Bildirimleri | {{E/H}} |
-| 4.1.Y.7 | E-Mail Bildirimleri | {{E/H}} |
-| 4.1.Y.8 | Memo / Ekstre | {{E/H}} |
+| 4.1.Y.7 | E-Mail Bilgilendirmeleri | {{E/H}} |
+| 4.1.Y.8 | Memo / Ekstre Mesajları | {{E/H}} |
 | 4.1.Y.9 | Uyarı / Hata Mesajları | {{E/H}} |
 | 4.1.Y.10 | Servisler (MCS) | {{E/H}} |
-| 4.1.Y.11 | İşlev özelinde Etki Analizi | {{E/H}} |
+| 4.1.Y.11 | Etki Analizi (işlev özelinde — generic component yan etki, çapraz işlev) | {{E/H}} |
 
 ### 1.2. Müşteri Tipi & Segment Kombinasyonu
 

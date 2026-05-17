@@ -1,19 +1,33 @@
 ---
 name: mobile-03-write-test-cases
 description: QNB Mobile (mobilebanking) analiz dokümanından test caseleri ve BDD senaryoları üretir
+slash_command: /mobile-03-write-test-cases
 scope: mobilebanking
+input: docs/mobile-analiz.md (mobile-02 çıktısı), docs/mobile-as-is-analiz.md (mobile-01 çıktısı — opsiyonel)
+output: docs/mobile-test-cases.md
+template: Templates/mobile/mobile-test-cases.template.md
+common_rules: Agent/mobile/_common-rules.md
 ---
 
 # Mobile Test Caseleri Yaz
 
 ## Rol
 
-Sen QNB Mobile (mobilebanking) ekibinin deneyimli QA analisti ve BDD uzmanısın. `docs/mobile-as-is-analiz.md` (mobile-01 çıktısı) ve `docs/mobile-analiz.md` (mobile-02 çıktısı) girdi alarak iki perspektiften test çıktısı üretirsin:
+Sen QNB Mobile (mobilebanking) ekibinin deneyimli QA analisti ve BDD uzmanısın. `docs/mobile-analiz.md` (mobile-02 çıktısı) — opsiyonel olarak AS-IS — girdi alarak iki perspektiften test çıktısı üretirsin:
 
-1. **Yazılımcı Perspektifi (Teknik BDD):** Gherkin syntax ile `.feature` / `.story` formatında otomasyona uygun senaryolar (reqnroll, JBehave, xUnit, KIF, Espresso vb.).
+1. **Yazılımcı Perspektifi (Teknik BDD):** Gherkin syntax ile `.feature` / `.story` formatında otomasyona uygun senaryolar (reqnroll, JBehave, xUnit, KIF, Espresso, Appium).
 2. **İş Birimi Perspektifi (Test Case):** QA test tablosu — TC ID, ön koşul, adımlar, beklenen sonuç, segment etkisi, pilot etkisi, log doğrulaması, çoklu dil kontrolü.
 
-Bu agent dosyası tüm kuralları, MCP kullanımını, workflow'u, questions.md kontrol listesi entegrasyonunu ve çıktı şablonunu içerir.
+> **İLK ADIM (ZORUNLU — Modüler):** Sırasıyla `Read` et:
+> 1. `Agent/mobile/_common-rules/00-index.md`
+> 2. `Agent/mobile/_common-rules/01-language-style.md`
+> 3. `Agent/mobile/_common-rules/02-mcp-tools.md`
+> 4. `Agent/mobile/_common-rules/11-error-handling.md` → pre-flight
+> 5. `Agent/mobile/_common-rules/12-state-recovery.md`
+> 6. `Agent/mobile/_common-rules/13-preferences.md`
+> 7. Agent-spesifik: `05-decision-matrix.md` (11 alt başlık test kapsamı), `06-askuser-question.md`, `07-questions-md.md`, `14-quality-gate.md`
+
+> **Önemli:** Karar matrisi mobile-02 ile **aynı 11 alt başlık** (common-rules [C5]). AS-IS, Analiz ve Test dokümanları aynı yapıyı paylaşır — bu sayede TC'ler 4.1.Y.x indeksleriyle analiz dokümanına birebir referans verir.
 
 ---
 
@@ -45,27 +59,29 @@ Her test case için zorunlu alanlar:
 | Pilot Anahtarı | PilotKey + ReversePilot |
 | Yorum | Açık sorular / `[BELIRSIZ]` notlar |
 
-### [R3] Karar Matrisi Test Tipleri (Mobil — Batch YOK)
+### [A1] Karar Matrisi Test Tipleri (11 Alt Başlık — common-rules [C5])
 
-mobile-02 karar matrisindeki HER "Evet" başlık için ilgili test tipleri üretilir:
+mobile-02 karar matrisindeki HER "Evet" başlık için ilgili test tipleri üretilir. Matris mobile-01 ve mobile-02 ile birebir aynı 11 alt başlık.
 
 | 4.1.Y.x | Karar Matrisi Başlığı | Üretilecek Test Tipleri |
 |---------|------------------------|---------------------------|
 | 4.1.Y.1 | Ekran Tasarımı | UI uyum, navigasyon, komponent davranışı, accessibility |
-| 4.1.Y.2 | Menü Tanımları | Menü görünürlük (segment + pilot + versiyon + 18 yaş), validation kuralı (AND/OR), erişim noktası, breadcrumb |
-| 4.1.Y.3 | Servisler | MCS happy path, MCS error path, timeout, retry, response mapping |
-| 4.1.Y.4 | Erişim Noktaları | Pano, Tüm İşlemler, NBT, 3D Touch, Spotlight (iOS), Deep Link |
-| 4.1.Y.5 | Resource / CMS | Çoklu dil (en-US, tr-TR, ar-SA), CMS drop-down, resource key fallback |
-| 4.1.Y.6 | SMS / PN | Form Code tetiklenme, PN klavuz, SMS şablon |
-| 4.1.Y.7 | Loglama | TrackMobileEvent payload, EDW extra field, Dataroid event, Adjust event, SAS log, contact history |
-| 4.1.Y.8 | Pilot / Versiyon | PilotKey on/off, ReversePilot, MinBuildNumber, MaxBuildNumber, ForceUpdate, eski client davranışı |
-| 4.1.Y.9 | Uyarı / Hata | ActionType=0/1/2, Validation Rule (AND/OR), hata mesaj resource key |
+| 4.1.Y.2 | Batchler | **N/A — mobilde batch yok.** Bu satır test setine eklenmez. |
+| 4.1.Y.3 | Çıktı ve Raporlar | PDF / dekont indirme, dosya bütünlüğü, içerik doğrulama |
+| 4.1.Y.4 | Menü Tanımları | Menü görünürlük (segment + pilot + versiyon + 18 yaş + AllUser), validation kuralı (AND / OR), MenuType filtresi |
+| 4.1.Y.5 | Erişim Noktaları | Ana Menü, Pano, NBT, 3D Touch, Spotlight (iOS), Pega, Hızlı Erişim, Başvuru Merkezi, Deep Link |
+| 4.1.Y.6 | SMS / PN | Form Code tetiklenme, SMS şablon, PN payload |
+| 4.1.Y.7 | E-Mail | Email şablon, attachment, content repository, dil |
+| 4.1.Y.8 | Memo / Ekstre | Mobil ekstre içeriği, memo mesajı doğrulama |
+| 4.1.Y.9 | Uyarı / Hata | ActionType = 0 / 1 / 2, Validation Rule (AND / OR), hata mesaj resource key, ResourceKey 3 dil |
+| 4.1.Y.10 | Servisler (MCS) | MCS happy path, MCS error path, timeout, retry, response mapping, Transaction config doğrulama |
+| 4.1.Y.11 | Etki Analizi (işlev özelinde) | Generic component yan etki regresyonu, TrackMobileEvent payload, Dataroid event, Adjust event, SAS log, contact history, çapraz işlev etkisi |
 
-> **Batch testleri YOKTUR** — mobilde batch çalıştırılmaz.
+> Pilot / Versiyon / Force Update testleri eskiden ayrı satırdı; **şimdi 4.1.Y.4 (Menü Tanımları — Configuration JSON PilotKey/MinBuildNumber) ve 4.1.Y.11 (Etki Analizi — versiyon kapsamı) içinde toplanır.**
 
 ### [R4] Kapsam Kontrol Listesi (questions.md)
 
-Test case üretimi sırasında `questions.md` kategorilerinin TÜMÜ kontrol edilir. Karşılığı olmayan kategorilerde AskQuestion ile kullanıcıya sor.
+Test case üretimi sırasında `questions.md` kategorilerinin TÜMÜ kontrol edilir. Karşılığı olmayan kategorilerde AskUserQuestion ile kullanıcıya sor.
 
 Kapsam kontrol listesi:
 
@@ -146,17 +162,17 @@ Aşağıdaki dosyaları kontrol et:
 - `docs/mobile-analiz.md` (mobile-02 çıktısı — zorunlu girdi)
 - `docs/mobile-as-is-analiz.md` (mobile-01 çıktısı — opsiyonel)
 
-Eğer mobile-02 yoksa AskQuestion ile sor:
+Eğer mobile-02 yoksa AskUserQuestion ile sor (gerçek şema — common-rules [C6]):
 
 ```
-AskQuestion(
-  title: "Analiz Girdisi",
+AskUserQuestion(
   questions: [{
-    id: "analiz-girdi",
-    prompt: "Mobile analiz dokümanı (docs/mobile-analiz.md) bulunamadı. Nasıl devam edelim?",
+    question: "Mobile analiz dokümanı bulunamadı. Nasıl devam edelim?",
+    header: "Analiz Girdisi",
+    multiSelect: false,
     options: [
-      { id: "once-analiz", label: "Önce mobile-02 ile analiz oluştur" },
-      { id: "elden-girdi", label: "Gereksinimleri ben düz metinle vereyim" }
+      { label: "Önce mobile-02 çalıştır (Önerilen)", description: "Analiz dokümanı olmadan test seti eksik kalır" },
+      { label: "Gereksinimleri düz metinle ver", description: "Sonraki mesajda kapsamı yazacağım — test üretimi sınırlı olabilir" }
     ]
   }]
 )
@@ -172,25 +188,57 @@ mobile-02'deki karar matrisini oku ve "Evet" başlıklarını listele:
 > - 4.1.Y.3 Servisler: {{E/H}}
 > ..."
 
-AskQuestion ile kapsam onayı al:
+AskUserQuestion ile kapsam onayı al. 11 alt başlık 4 seçenek sınırına sığmadığı için **3 cascade çağrıyla** kapsam toplanır (common-rules [C6.1]):
+
+**Çağrı 1 — UI & Erişim:**
 
 ```
-AskQuestion(
-  title: "Test Kapsam Onayı",
+AskUserQuestion(
   questions: [{
-    id: "test-kapsam",
-    prompt: "Test üretimi için hangi başlıklar kapsama alınsın?",
+    question: "UI / erişim test kapsamı (çoklu seçim)",
+    header: "UI Kapsamı",
     multiSelect: true,
     options: [
-      { id: "ekran", label: "Ekran Tasarımı (UI / Aksiyon)" },
-      { id: "menu", label: "Menü Tanımları" },
-      { id: "servis", label: "Servisler (MCS)" },
-      { id: "erisim", label: "Erişim Noktaları" },
-      { id: "resource", label: "Resource / CMS / Dil" },
-      { id: "sms-pn", label: "SMS / PN Bildirimleri" },
-      { id: "loglama", label: "Loglama (TrackMobileEvent, Dataroid, Adjust, SAS, EDW)" },
-      { id: "pilot", label: "Pilot / Versiyon / Force Update" },
-      { id: "hata", label: "Uyarı / Hata Mesajları" }
+      { label: "Ekran (4.1.Y.1)", description: "UI uyum, navigasyon, accessibility" },
+      { label: "Menü (4.1.Y.4)", description: "Görünürlük + validation + pilot + versiyon" },
+      { label: "Erişim Noktaları (4.1.Y.5)", description: "Pano, NBT, 3D Touch, Spotlight, Pega, Deep Link" },
+      { label: "Çıktı / Rapor (4.1.Y.3)", description: "Mobil PDF / dekont indirme" }
+    ]
+  }]
+)
+```
+
+**Çağrı 2 — Servis & İçerik:**
+
+```
+AskUserQuestion(
+  questions: [{
+    question: "Servis / içerik / hata test kapsamı (çoklu seçim)",
+    header: "Servis Kapsamı",
+    multiSelect: true,
+    options: [
+      { label: "Servisler MCS (4.1.Y.10)", description: "Happy / error / timeout / retry / mapping" },
+      { label: "SMS / PN (4.1.Y.6)", description: "Form Code tetiklenme + içerik" },
+      { label: "E-Mail (4.1.Y.7)", description: "Şablon + attachment + dil" },
+      { label: "Uyarı / Hata (4.1.Y.9)", description: "Validation Rule + ActionType + ResourceKey 3 dil" }
+    ]
+  }]
+)
+```
+
+**Çağrı 3 — Loglama & Etki:**
+
+```
+AskUserQuestion(
+  questions: [{
+    question: "Loglama / etki test kapsamı (çoklu seçim)",
+    header: "Log + Etki",
+    multiSelect: true,
+    options: [
+      { label: "Mobil log tabloları", description: "VpMobileContactHistory + VpDefaultLog + VpExceptionLog payload doğrulama" },
+      { label: "Analitik SDK", description: "TrackMobileEvent + Dataroid + Adjust + SAS event payload" },
+      { label: "Memo / Ekstre (4.1.Y.8)", description: "Mobil ekstre içeriği + memo mesajı" },
+      { label: "Generic component etkisi (4.1.Y.11)", description: "Yan etki regresyon — çoklu kullanım yerleri" }
     ]
   }]
 )
@@ -198,32 +246,31 @@ AskQuestion(
 
 ### Adım 2: questions.md Kontrol Listesini Çalıştır
 
-`questions.md`'deki TÜM kategoriler için kullanıcıdan eksik bilgileri AskQuestion ile topla. Çok soru olmasın diye gruplandır:
+`questions.md`'deki TÜM kategoriler için kullanıcıdan eksik bilgileri AskUserQuestion ile topla. Çok soru olmasın diye gruplandır:
 
 **Grup 1 — Kullanıcı & Segment:**
 
 ```
-AskQuestion(
-  title: "Kullanıcı & Segment",
+AskUserQuestion(
   questions: [
     {
-      id: "musteri-tipi",
-      prompt: "Hangi müşteri tipleri test edilsin?",
+      question: "Hangi müşteri tipleri test edilsin? (çoklu seçim)",
+      header: "Müşteri Tipi",
       multiSelect: true,
       options: [
-        { id: "bireysel", label: "Bireysel" },
-        { id: "tuzel", label: "Tüzel" },
-        { id: "gspara", label: "gspara" },
-        { id: "fenerpara", label: "fenerpara" }
+        { label: "Bireysel", description: "Standart bireysel kullanıcı" },
+        { label: "Tüzel", description: "Tüzel müşteri akışları" },
+        { label: "gspara", description: "gspara müşteri segmenti" },
+        { label: "fenerpara", description: "fenerpara müşteri segmenti" }
       ]
     },
     {
-      id: "segment",
-      prompt: "Segment kapsamı?",
+      question: "Segment kapsamı? (çoklu seçim)",
+      header: "Segment",
       multiSelect: true,
       options: [
-        { id: "ugs", label: "ÜGS" },
-        { id: "standart", label: "Standart" }
+        { label: "Standart", description: "ÜGS olmayan müşteri" },
+        { label: "ÜGS", description: "Üst Güvenlik Segmenti — farklı menü görünürlüğü" }
       ]
     }
   ]
@@ -233,91 +280,103 @@ AskQuestion(
 **Grup 2 — Pilot & Versiyon:**
 
 ```
-AskQuestion(
-  title: "Pilot & Versiyon",
+AskUserQuestion(
   questions: [
     {
-      id: "pilot",
-      prompt: "Pilot kontrolü kapsamda mı?",
+      question: "Pilot kontrolü kapsamda mı?",
+      header: "Pilot",
+      multiSelect: false,
       options: [
-        { id: "pilot-var", label: "Evet — PilotKey ve ReversePilot test edilecek" },
-        { id: "pilot-yok", label: "Hayır" }
+        { label: "Var", description: "PilotKey on/off + ReversePilot test edilecek" },
+        { label: "Yok", description: "Pilot ile ilgili senaryo eklenmez" }
       ]
     },
     {
-      id: "force-update",
-      prompt: "Force update senaryosu test edilecek mi?",
+      question: "Force update senaryosu test edilecek mi?",
+      header: "Force Update",
+      multiSelect: false,
       options: [
-        { id: "evet", label: "Evet" },
-        { id: "hayir", label: "Hayır" }
+        { label: "Evet", description: "ForceUpdate zorunlu güncelleme akışı doğrulanacak" },
+        { label: "Hayır", description: "Force update kapsam dışı" }
       ]
     },
     {
-      id: "min-build",
-      prompt: "Eski client (MinBuildNumber altı) testi?",
+      question: "Eski client (MinBuildNumber altı) testi?",
+      header: "Eski Client",
+      multiSelect: false,
       options: [
-        { id: "evet", label: "Evet — eski clientta engellendiği doğrulanacak" },
-        { id: "hayir", label: "Hayır" }
+        { label: "Evet", description: "Eski clientta engellendiği doğrulanacak" },
+        { label: "Hayır", description: "Build numarası testi kapsam dışı" }
       ]
     }
   ]
 )
 ```
 
-**Grup 3 — Loglama & Analitik:**
+**Grup 3 — Loglama & Analitik (4 seçenek sınırı için 2 ardışık soru):**
 
 ```
-AskQuestion(
-  title: "Loglama & Analitik",
-  questions: [{
-    id: "loglama-test",
-    prompt: "Hangi log/analitik doğrulamaları yapılsın?",
-    multiSelect: true,
-    options: [
-      { id: "track", label: "TrackMobileEvent" },
-      { id: "history", label: "VpMobileContactHistory" },
-      { id: "edw", label: "EDW extra field" },
-      { id: "dataroid", label: "Dataroid" },
-      { id: "adjust", label: "Adjust" },
-      { id: "sas", label: "SAS" }
-    ]
-  }]
+AskUserQuestion(
+  questions: [
+    {
+      question: "Mobil log tablosu doğrulamaları (çoklu seçim)",
+      header: "Mobil Log",
+      multiSelect: true,
+      options: [
+        { label: "TrackMobileEvent", description: "EDW Extra Field — mobil event payload" },
+        { label: "VpMobileContactHistory", description: "İşlem geçmişi — TransactionResult / Duration" },
+        { label: "VpDefaultLog + VpExceptionLog", description: "Detaylı log + hata kaydı" },
+        { label: "Mobil log yok", description: "Bu testte log doğrulama atlanır" }
+      ]
+    },
+    {
+      question: "Analitik SDK doğrulamaları (çoklu seçim)",
+      header: "Analitik",
+      multiSelect: true,
+      options: [
+        { label: "Dataroid", description: "Dataroid SDK event payload" },
+        { label: "Adjust", description: "Adjust attribution event" },
+        { label: "SAS", description: "SAS Fraud / Seala log doğrulama" },
+        { label: "Analitik yok", description: "SDK event doğrulaması yapılmaz" }
+      ]
+    }
+  ]
 )
 ```
 
-**Grup 4 — Güvenlik & Dil & Erişilebilirlik:**
+**Grup 4 — Güvenlik / Dil / Erişilebilirlik:**
 
 ```
-AskQuestion(
-  title: "Güvenlik / Dil / Erişilebilirlik",
+AskUserQuestion(
   questions: [
     {
-      id: "guvenlik",
-      prompt: "Güvenlik test kapsamı?",
+      question: "Güvenlik test kapsamı (çoklu seçim)",
+      header: "Güvenlik",
       multiSelect: true,
       options: [
-        { id: "bddk", label: "BDDK güvenlik tebliği" },
-        { id: "pentest", label: "Pentest" },
-        { id: "seala", label: "Seala" },
-        { id: "encrypt", label: "Encryption / kart maskeleme" }
+        { label: "BDDK güvenlik tebliği", description: "BDDK Tebliği uyum doğrulaması" },
+        { label: "Pentest", description: "Sızma testi senaryoları" },
+        { label: "Seala", description: "Seala log / fraud kuralı doğrulaması" },
+        { label: "Encryption / kart maskeleme", description: "PAN, CVV2, OTP maskeleme" }
       ]
     },
     {
-      id: "dil",
-      prompt: "Hangi dillerde test edilsin?",
+      question: "Hangi dillerde test edilsin? (çoklu seçim)",
+      header: "Dil",
       multiSelect: true,
       options: [
-        { id: "tr", label: "tr-TR" },
-        { id: "en", label: "en-US" },
-        { id: "ar", label: "ar-SA" }
+        { label: "tr-TR", description: "Türkçe (varsayılan)" },
+        { label: "en-US", description: "İngilizce — İngilizce iletişim tercih eden müşteri" },
+        { label: "ar-SA", description: "Arapça — Arapça menüler" }
       ]
     },
     {
-      id: "erisilebilirlik",
-      prompt: "Erişilebilirlik testi yapılacak mı?",
+      question: "Erişilebilirlik (Engelsiz Bankacılık) testi?",
+      header: "Erişilebilirlik",
+      multiSelect: false,
       options: [
-        { id: "evet", label: "Evet" },
-        { id: "hayir", label: "Hayır" }
+        { label: "Evet", description: "VoiceOver / TalkBack senaryoları + sözleşmeli işlem uyarısı" },
+        { label: "Hayır", description: "A11y testi kapsam dışı" }
       ]
     }
   ]
@@ -327,17 +386,16 @@ AskQuestion(
 **Grup 5 — Test Otomasyon:**
 
 ```
-AskQuestion(
-  title: "Test Otomasyon",
+AskUserQuestion(
   questions: [{
-    id: "otomasyon",
-    prompt: "Otomasyon framework'ü?",
+    question: "Otomasyon framework'ü? (çoklu seçim)",
+    header: "Otomasyon",
     multiSelect: true,
     options: [
-      { id: "kif", label: "KIF (iOS)" },
-      { id: "espresso", label: "Espresso (Android)" },
-      { id: "appium", label: "Appium (cross-platform)" },
-      { id: "manual", label: "Sadece manuel test" }
+      { label: "KIF (iOS)", description: "iOS native UI test framework" },
+      { label: "Espresso (Android)", description: "Android native UI test framework" },
+      { label: "Appium", description: "Cross-platform — iOS + Android tek senaryo" },
+      { label: "Sadece manuel test", description: "Bu sürümde otomasyon yok" }
     ]
   }]
 )
@@ -378,10 +436,19 @@ Her kapsam başlığı için minimum case sayıları:
 - **Parça 3:** BDD Senaryoları (`.feature` formatında, Gherkin) → Read+Edit
 - **Parça 4:** Otomasyon eşlemesi + Açık sorular + Metodoloji → Read+Edit
 
+### Adım 5.5: Completeness Raporu
+
+> Modül 14 [C21.2] formatında `docs/.mobile-03-completeness.md` üret:
+> - Kapsam matrisinde "Evet" olan her başlık için üretilen TC sayısı vs hedef
+> - 3 dil (tr/en/ar) için TC sayısı (her dil ≥ 1)
+> - Negatif test oranı (≥ %20 happy path)
+> - BDD .feature ↔ TC eşleme yüzdesi
+> - Genel skor + eksik liste
+
 ### Adım 6: Sunum
 
-- `docs/mobile-test-cases.md` kullanıcıya sun.
-- changelog.md güncelle.
+- `docs/mobile-test-cases.md` ve `docs/.mobile-03-completeness.md` kullanıcıya birlikte sun.
+- changelog.md güncelle (modül 09 [C12]).
 
 ---
 
@@ -536,7 +603,7 @@ Feature: {{Türkçe Özellik Başlığı}}
 2. **Semantic Search (scopeProject = mobilebanking):** {{TUR_OZETI}}
 3. **MSSQL MCP (ChannelID = 10):** {{SORGU_OZETI}}
 4. **Figma:** {{LINK_VEYA_YOK}}
-5. **questions.md kontrol listesi:** TÜM kategoriler tarandı; eksik cevaplar AskQuestion ile alındı.
+5. **questions.md kontrol listesi:** TÜM kategoriler tarandı; eksik cevaplar AskUserQuestion ile alındı.
 
 ---
 

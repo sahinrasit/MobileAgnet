@@ -98,21 +98,23 @@ flowchart TB
 
 #### 4.1.Y {{ISLEV_BASLIGI}} — Mevcut Durum
 
-**Karar Matrisi (Mobil — 9 Başlık, Batch Çıkarıldı):**
+**Karar Matrisi (Mobil — 11 Alt Başlık, common-rules [C5] ile ortak):**
 
-| Analiz Edilecek Başlıklar | Evet / Hayır | Index | Başlık |
-|---------------------------|--------------|-------|--------|
-| Ekran Tasarımı (Figma + iOS/Android) | {{E/H}} | 4.1.Y.1 | Ekran Tasarımı |
-| Menü Tanımları (MobileMenu / Mapping) | {{E/H}} | 4.1.Y.2 | Menü Tanımları |
-| Servisler (MCS / Transaction) | {{E/H}} | 4.1.Y.3 | Servisler |
-| Erişim Noktaları (Pano, NBT, 3D Touch, Spotlight, Deep Link) | {{E/H}} | 4.1.Y.4 | Erişim Noktaları |
-| Resource / CMS İçeriği (VpStringResource) | {{E/H}} | 4.1.Y.5 | Resource / CMS |
-| SMS / PN Bildirimleri | {{E/H}} | 4.1.Y.6 | SMS / PN Bildirimleri |
-| Loglama (TrackMobileEvent, EDW, Dataroid, Adjust, SAS) | {{E/H}} | 4.1.Y.7 | Loglama |
-| Pilot / Versiyon / Force Update | {{E/H}} | 4.1.Y.8 | Pilot / Versiyon |
-| Uyarı / Hata Mesajları (Validation, ActionType) | {{E/H}} | 4.1.Y.9 | Uyarı / Hata |
+| Analiz Edilecek Başlık | Evet / Hayır | Index | AS-IS Notu |
+|-------------------------|--------------|-------|--------------|
+| Ekran Tasarımı | {{E/H}} | 4.1.Y.1 | Figma + iOS Storyboard/VC + Android Activity/Class |
+| Batchler | **Hayır** (default) | 4.1.Y.2 | "Mobil kapsamda batch tanımı bulunmamaktadır" — başlık silinmez |
+| Çıktı ve Raporlar | {{E/H}} | 4.1.Y.3 | Mevcut PDF / dekont indirme |
+| Menü Tanımları | {{E/H}} | 4.1.Y.4 | Mevcut MobileMenu + MobileMenuMapping kayıtları |
+| Erişim Noktaları | {{E/H}} | 4.1.Y.5 | Pano, NBT, 3D Touch, Spotlight, Deep Link |
+| SMS / PN Bilgilendirmeleri | {{E/H}} | 4.1.Y.6 | Mevcut Form Code'lar |
+| E-Mail Bilgilendirmeleri | {{E/H}} | 4.1.Y.7 | Mevcut Email şablonları |
+| Memo / Ekstre Mesajları | {{E/H}} | 4.1.Y.8 | Mevcut memo / ekstre mesajları |
+| Uyarı / Hata Mesajları | {{E/H}} | 4.1.Y.9 | Mevcut Validation Rule + ActionType |
+| Servisler | {{E/H}} | 4.1.Y.10 | Mevcut MCS TransactionName + mwbackend handler'ları |
+| Etki Analizi (mevcut etki noktaları) | {{E/H}} | 4.1.Y.11 | Bu işlevin bugünkü çevresel etki noktaları |
 
-> **Not:** Sadece "Evet" işaretlenen başlıklar aşağıda ardışık olarak detaylandırılır.
+> **Not:** "Hayır" işaretlenen başlıklar dokümanda silinmez; common-rules [C15] "Standart Etkisiz Cümle Sözlüğü"nden uygun cümleyle doldurulur. Batchler satırı default Hayır + standart cümle ile geçilir.
 
 ---
 
@@ -134,11 +136,29 @@ flowchart TB
 
 > {{IS_MANTIGI_OZETI}}
 >
-> **Kaynak:** `mobilebanking-ios/{{YOL}}` | {{VC_ADI}}, `mobilebanking-android/{{YOL}}` | {{ACTIVITY_ADI}}
+> **Kaynak:** `ios/{{YOL}}` | {{VC_ADI}}, `android/{{YOL}}` | {{ACTIVITY_ADI}}
 
 ---
 
-##### 4.1.Y.2. Menü Tanımları
+##### 4.1.Y.2. Batchler
+
+> **Standart:** "Mobil kapsamda batch tanımı bulunmamaktadır." (default — başlık silinmez)
+
+İstisna durumunda (mobilden tetiklenen ancak sunucu tarafında zamanlanmış işlem varsa): {{ISTISNA_PARAGRAFI}}
+
+---
+
+##### 4.1.Y.3. Çıktı ve Raporlar
+
+> Etkisi yoksa: "Çıktı veya rapor gereksinimi bulunmamaktadır."
+
+| Çıktı Tipi | Format | Erişim Yeri (Ekran) | Üreten Bileşen |
+|--------------|---------|----------------------|------------------|
+| {{CIKTI_1}} | PDF / TXT | {{EKRAN}} | {{BILESEN}} |
+
+---
+
+##### 4.1.Y.4. Menü Tanımları
 
 **MobileMenu Kayıtları (CommonDb.MobileMenu, ChannelID = 10):**
 
@@ -156,67 +176,28 @@ flowchart TB
 
 **MobileMenuMapping Kayıtları:**
 
-| ReferenceID | MenuType (1-15) | ParentMenu | TitleKey |
-|--------------|-------------------|-------------|-----------|
+| ReferenceID | MenuType (1-15; 11 rezerve) | ParentMenu | TitleKey |
+|--------------|-------------------------------|-------------|-----------|
 | {{REF_1}} | {{TIP_1}} | 0/1 | {{KEY_1}} |
 
----
-
-##### 4.1.Y.3. Servisler (MCS)
-
-**Servis İş Mantığı (paragraf):**
-
-{{SERVIS_IS_MANTIGI_PARAGRAFI}}
-
-**MCS TransactionName Listesi:**
-
-| # | Türkçe Servis Adı | Transaction Name | Ne Yapıyor | Giriş Özü | Çıkış Özü |
-|---|---------------------|--------------------|-------------|------------|------------|
-| 1 | {{TR_AD_1}} | {{TXN_1}} | {{NE_1}} | {{IN_1}} | {{OUT_1}} |
-
-**Host Mapping (VpVeriBranchHostCallMappingView + VpHostCallMappingDetail):**
-
-{{MAPPING_PARAGRAFI}}
-
-**Backend İş Mantığı (mwbackend DDD):**
-
-> {{IS_MANTIGI_OZETI}}
->
-> **Kaynak:** `mwbackend/Application/{{Domain}}/UseCase/{{Dosya}}.cs` | {{HANDLER_ADI}}
-> `mwbackend/Domain/{{Domain}}/Service/{{Dosya}}.cs` | TransactionNameConstants.{{TXN}}
+> MenuType 11 rezerve / kullanım dışı; common-rules [C5] MenuType listesi.
 
 ---
 
-##### 4.1.Y.4. Erişim Noktaları
+##### 4.1.Y.5. Erişim Noktaları
 
 | Erişim Tipi | MenuType | Kaynağı | Açıklama |
 |---------------|----------|---------|----------|
 | Ana Menü | — | MobileMenu | {{ACK_1}} |
 | Pano | 1 | MobileMenuMapping | {{ACK_2}} |
 | Mandatory | 2 | MobileMenuMapping | {{ACK_3}} |
-| 3D Touch | 9 | MobileMenuMapping | {{ACK_4}} |
+| 3D Touch (Kısayol) | 9 | MobileMenuMapping | {{ACK_4}} |
 | Spotlight (iOS) | 10 | MobileMenuMapping | {{ACK_5}} |
 | NBT Sık Kullanılan | 12 | MobileMenuMapping | {{ACK_6}} |
 | Pega Sık Kullanılan | 13 | MobileMenuMapping | {{ACK_7}} |
 | Hızlı Erişim Panosu | 14 | MobileMenuMapping | {{ACK_8}} |
 | Başvuru Merkezi | 15 | MobileMenuMapping | {{ACK_9}} |
 | Deep Link | — | Configuration JSON | {{ACK_10}} |
-
----
-
-##### 4.1.Y.5. Resource / CMS İçeriği
-
-**VpStringResource Kayıtları (ChannelID = 10, 3 Dil):**
-
-| ResourceType | ResourceKey | tr-TR | en-US | ar-SA |
-|---------------|--------------|--------|--------|--------|
-| MobileMenu | {{KEY_1}} | {{TR_1}} | {{EN_1}} | {{AR_1}} |
-| GeneralResource | {{KEY_2}} | {{TR_2}} | {{EN_2}} | {{AR_2}} |
-| DigitalConfirmTemplate{{ID}} | {{KEY_3}} | {{TR_3}} | {{EN_3}} | {{AR_3}} |
-
-**CMS Drop-down İçeriği:**
-
-{{CMS_PARAGRAFI}}
 
 ---
 
@@ -233,27 +214,25 @@ flowchart TB
 
 ---
 
-##### 4.1.Y.7. Loglama
+##### 4.1.Y.7. E-Mail Bilgilendirmeleri
 
-| Loglama Tipi | Tablo / Sistem | Tetiklenme | Alanlar |
-|---------------|------------------|-------------|---------|
-| Oturum log | VpMobileContact (MobileDefaultLog) | Login | ContactID, SessionID, DeviceName, OSVersion, IsRoot, IsEmulator, CreateDate |
-| İşlem geçmişi | VpMobileContactHistory | Her işlem | ContactHistoryID, TransactionName, Amount, Duration, TransactionResult |
-| Detaylı log | VpDefaultLog | Her işlem | TxnUniqueID, XmlInputData, XmlOutputData, ErrorData, MethodType |
-| Hata log | VpExceptionLog | Exception | ErrorType, Message, StackTrace, IsCritical |
-| Özet log | VpTransactionHistoryLog | Her işlem | IsSuccess, CoreExceptionID |
-| Mobil event | TrackMobileEvent | UI / iş aksiyonu | {{EVENT_LISTESI}} |
-| Dataroid | Dataroid SDK | UI / iş aksiyonu | {{EVENT_LISTESI}} |
-| Adjust | Adjust SDK | Attribution / dönüşüm | {{EVENT_LISTESI}} |
-| SAS | SAS Fraud log | Fraud kuralları | {{ATTRIBUTE_LISTESI}} |
+> Etkisi yoksa: "E-Mail bilgilendirme gereksinimi bulunmamaktadır."
+
+| Şablon ResourceKey | Tetiklenme | Attachment | Content Repository |
+|------------------------|-------------|-------------|----------------------|
+| {{KEY}} | {{KOSUL}} | {{ATT}} | {{REPO}} |
+
+> SMG Queue OID Email: 9600010000000070 / NOTIFICATION_EMAIL_TEMPLATE refresh.
 
 ---
 
-##### 4.1.Y.8. Pilot / Versiyon
+##### 4.1.Y.8. Memo / Ekstre Mesajları
 
-| PilotKey | ReversePilot | MinBuildNumber iOS | MinBuildNumber Android | MaxBuildNumber | ForceUpdate |
-|-----------|---------------|----------------------|---------------------------|------------------|---------------|
-| {{KEY_1}} | true / false | {{IOS_BUILD}} | {{ANDROID_BUILD}} | {{MAX}} | {{FU}} |
+> Etkisi yoksa: "Memo / ekstre mesajı gereksinimi bulunmamaktadır."
+
+| Mesaj Tipi | İçerik (ResourceKey) | Hesap / Kart | Tetiklenme |
+|-------------|--------------------------|----------------|-------------|
+| {{TIP}} | {{KEY}} | {{HESAP/KART}} | {{KOSUL}} |
 
 ---
 
@@ -261,9 +240,82 @@ flowchart TB
 
 | Validation FilterKey | FilterValue | FilterOperation | ActionType (0/1/2) | ActionMessage ResourceKey | Davranış |
 |------------------------|--------------|--------------------|----------------------|------------------------------|------------|
-| {{KEY_1}} | {{VAL_1}} | equal / greaterThanEqual / lessThanEqual | 0 | {{MSG_KEY_1}} | Menüyü gizle |
+| {{KEY}} | {{VAL}} | equal / greaterThanEqual / lessThanEqual | 0 | {{MSG_KEY}} | Menüyü gizle |
 
 > ActionType: 0 = Menüyü gizle; 1 = Akışı kes + popup göster; 2 = Popup göster + sayfaya yönlendir.
+
+---
+
+##### 4.1.Y.10. Servisler (MCS)
+
+> Bu bölüm common-rules [C17] 5 adımlı MCS analiz yöntemiyle doldurulur: VpTransactionConfig (10 kanalı kontrol + fallback) → VpHostCallMappingDetail (parametre listesi) → mwbackend semantic-search (alan kullanımı) → çağrı zinciri inferansı.
+
+**Servis İş Mantığı (paragraf):**
+
+{{SERVIS_IS_MANTIGI_PARAGRAFI}}
+
+**Tablo A — Servis Tanım Durumu (TransactionName başına):**
+
+| Alan | Değer | Kaynak |
+|------|-------|--------|
+| TransactionName | `{{TXN}}` | VpTransaction |
+| ChannelID = 10 tanımlı mı? | {{Evet / Hayır — Hayır ise hangi kanaldan input/output alındı}} | VpTransactionConfig |
+| RequestType | `VeriBranch.Common.MessageDefinitions.{{TXN}}Request` | XML Config |
+| ResponseType | `VeriBranch.Common.MessageDefinitions.{{TXN}}Response` | XML Config |
+| HostProcessCode | `{{KOD}}` | VpTransactionAttributes |
+| IsFinancial | {{0/1}} | VpTransaction |
+
+**Tablo B — Input / Output Alanları (VpHostCallMappingDetail + mwbackend kullanım):**
+
+| Yön | Alan Adı | Tip | Zorunlu | mwbackend Kullanım Yeri |
+|------|-----------|-----|----------|----------------------------|
+| IN | {{ALAN_IN_1}} | {{TIP}} | E/H | `mwbackend/Application/{{Yol}}` | {{Handler/UseCase}} |
+| IN | {{ALAN_IN_2}} | {{TIP}} | E/H | {{KULLANIM}} |
+| OUT | {{ALAN_OUT_1}} | {{TIP}} | — | Mapping → DTO clienta dönüyor |
+| OUT | {{ALAN_OUT_2}} | {{TIP}} | — | Helper {{Method}} ile işleniyor |
+
+**Tablo C — Çağrı Zinciri (Aynı Akışta Tetiklenen MCS'ler):**
+
+| Sıra | TransactionName | UseCase / Handler | Karar Koşulu |
+|------|------------------|---------------------|---------------|
+| 1 | {{TXN_1}} | {{KAYNAK}} | Her zaman |
+| 2 | {{TXN_2}} | {{KAYNAK}} | {{IF_KOSULU}} |
+| 3 | {{TXN_3}} | {{KAYNAK}} | {{ShortFlow / LongFlow}} |
+
+**MCS TransactionName Özet Listesi:**
+
+| # | Türkçe Servis Adı | Transaction Name | Ne Yapıyor | Giriş Özü | Çıkış Özü |
+|---|---------------------|--------------------|-------------|------------|------------|
+| 1 | {{TR_AD_1}} | {{TXN_1}} | {{NE_1}} | {{IN_1}} | {{OUT_1}} |
+
+**Host Mapping (VpVeriBranchHostCallMappingView + VpHostCallMappingDetail):**
+
+{{MAPPING_PARAGRAFI}}
+
+**Backend İş Mantığı (mwbackend DDD — Application + Domain):**
+
+> {{IS_MANTIGI_OZETI}}
+>
+> **Kaynak:** `mwbackend/Application/{{Domain}}/UseCase/{{Dosya}}.cs` | {{HANDLER_ADI}}
+> `mwbackend/Domain/{{Domain}}/Service/{{Dosya}}.cs` | TransactionNameConstants.{{TXN}}
+> `MCSVeribranchBI/{{Servis}}/{{Dosya}}.cs` | {{MCS_CALL}}
+
+---
+
+##### 4.1.Y.11. Etki Analizi (Mevcut Etki Noktaları)
+
+> AS-IS özelinde bu başlık: bu işlevin **bugünkü çevresel etki noktaları**. Yeni etki değil — mevcut durumda hangi modül, log, MCS, menü, resource ile etkileşimde olduğunun fotoğrafı.
+
+| Etki Türü | Mevcut Etki Var Mı? | Açıklama |
+|------------|-----------------------|----------|
+| MCS bağımlılığı | {{E/H}} | Bu işlev şu MCS'leri çağırıyor: {{LISTE}} |
+| Loglama (TrackMobileEvent, EDW, Dataroid, Adjust, SAS) | {{E/H}} | {{LOG_LISTESI}} |
+| Resource bağımlılığı (VpStringResource) | {{E/H}} | {{KEY_LISTESI}} |
+| Menü bağımlılığı (MobileMenu / Mapping) | {{E/H}} | {{ID_LISTESI}} |
+| Generic component kullanımı | {{E/H}} | {{COMPONENT_LISTESI}} ve etkilenen yer sayısı |
+| Pilot / Versiyon bağımlılığı | {{E/H}} | PilotKey={{KEY}}, MinBuild={{NO}} |
+| Müşteri bilgilendirme (SMS / PN / Email) | {{E/H}} | {{FORM_LISTESI}} |
+| Dil (tr-TR, en-US, ar-SA) | {{E/H}} | {{KARSILAMA_DURUMU}} |
 
 ---
 
