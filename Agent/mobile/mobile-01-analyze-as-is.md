@@ -348,6 +348,8 @@ AskQuestion(
 
 ### Adım 8: Doküman Oluşturma (PARÇALI)
 
+> **Şablon Referansı (ZORUNLU):** Bu adıma başlarken önce `Templates/mobile/mobile-as-is-analiz.template.md` dosyasını **Read** ile oku. Doküman bu şablonun yapısını birebir takip eder; placeholder'lar (`{{...}}`) araştırma bulgularıyla doldurulur. Şablonda olmayan başlık eklenmez, mevcut başlık silinmez.
+
 `docs/mobile-as-is-analiz.md` dosyasını PARÇALI olarak oluştur. Her parça AYRI MESAJDA. Kullanıcı yanıtı beklenmez.
 
 **Parçalar:**

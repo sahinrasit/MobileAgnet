@@ -495,6 +495,8 @@ AskQuestion(
 
 ### Adım 9: Doküman Oluşturma (PARÇALI — SDLC Tam Şablon)
 
+> **Şablon Referansı (ZORUNLU):** Bu adıma başlarken önce `Templates/mobile/mobile-analiz.template.md` dosyasını **Read** ile oku. Doküman bu şablonun (QNB BT_REQM00004 mobil uyarlaması — 3.4.1–3.4.11 ve 4.1.X.1–4.1.X.11 + 4.2–4.4 tam yapı) yapısını birebir takip eder. Placeholder'lar (`{{...}}`) araştırma bulgularıyla, etkisiz başlıklar **Standart Etkisiz Cümle Sözlüğü**'ndeki cümlelerle doldurulur. **Başlık silinmez** kuralı her parça için geçerlidir.
+
 `docs/mobile-analiz.md` PARÇALI yazılır. Her parça AYRI mesajda. Kullanıcı yanıtı beklenmez.
 
 | Parça | İçerik | İşlem |

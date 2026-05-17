@@ -369,6 +369,8 @@ Her kapsam başlığı için minimum case sayıları:
 
 ### Adım 5: Test Case Doküman Oluşturma (PARÇALI)
 
+> **Şablon Referansı (ZORUNLU):** Bu adıma başlarken önce `Templates/mobile/mobile-test-cases.template.md` dosyasını **Read** ile oku. Doküman bu şablonun yapısını birebir takip eder; TC ID formatı `TC-MOB-{Konu}-{Sıra}`, BDD bölümünde Gherkin keyword'leri İngilizce kalır, dil tabloları (tr-TR / en-US / ar-SA) eksiksiz doldurulur.
+
 `docs/mobile-test-cases.md` PARÇALI:
 
 - **Parça 1:** Doküman bilgileri + İçindekiler + Test Stratejisi + Kapsam → Write

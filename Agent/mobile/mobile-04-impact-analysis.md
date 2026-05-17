@@ -368,6 +368,8 @@ Her etki satırı için: Etki var/yok, açıklama, kaynak referansı, sorumluluk
 
 ### Adım 5: Doküman Oluşturma (PARÇALI)
 
+> **Şablon Referansı (ZORUNLU):** Bu adıma başlarken önce `Templates/mobile/mobile-etki-analizi.template.md` dosyasını **Read** ile oku. Doküman bu şablonun yapısını birebir takip eder; "Etki Durumu Tek Seçim" en üstte, kategoriler (1. Genel, 2. Kanallar — Mobil odaklı, 3. Güvenlik, 4. EDW, 5. Test) tam doldurulur, kapsam dışı kategoriler 6. bölümde tek tabloyla geçilir.
+
 `docs/mobile-etki-analizi.md` PARÇALI:
 
 - **Parça 1:** Doküman başlığı + Tek seçim + İçindekiler → Write
