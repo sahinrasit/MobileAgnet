@@ -20,6 +20,7 @@
 | 12 | [12-state-recovery.md](12-state-recovery.md) | State dosyaları, çıktı doğrulama, AS-IS özet, rolling summary ([C19]) | Tüm agentlar |
 | 13 | [13-preferences.md](13-preferences.md) | docs/.mobile-preferences.json tercih saklama ([C20]) | Tüm agentlar |
 | 14 | [14-quality-gate.md](14-quality-gate.md) | Quality gate kriterleri, completeness raporu ([C21]) | Tüm agentlar + orchestrator |
+| 15 | [15-db-reference.md](15-db-reference.md) | DB kanonik referansı — CommonDb + MobileDefaultLog tüm tablolar, kolonlar, sorgular, şablonlar ([DB1]-[DB8]) | DB işlemi yapan tüm agentlar (mobile-00/01/02/04/05) |
 
 ## Hangi Modülü Ne Zaman Oku?
 
@@ -36,6 +37,7 @@
 - 09 Changelog: sunum öncesi
 - 10 MCS Discovery: MCS servis analizi yapılırken (mobile-01/02/04 4.1.Y.10)
 - 14 Quality gate: sunum öncesi completeness raporu
+- 15 DB Reference: herhangi bir mcp-mssql sorgusu/insert'i yapmadan önce ilgili tablo bölümü ([DB2]-[DB7])
 
 ## Agent Başlangıç Kontrol Listesi
 

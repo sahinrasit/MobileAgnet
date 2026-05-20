@@ -23,3 +23,7 @@
 - VpTransactionAttributes
 
 **Diğer kanal fallback (MCS analizi için, modül 10 [C17]):** Bir MCS servis ChannelID = 10'da tanımlı değilse, sırasıyla 20 → 30 → 40 → 50 fallback ile input/output yapısı öğrenilir. Mobil için "tanım eklenmesi gerekiyor" notu çıkarılır.
+
+## İSTİSNA — ChannelID Gerekmeyen Tablolar
+
+**MCS mapping tabloları `VpVeriBranchHostCallMappingView` ve `VpHostCallMappingDetail` ChannelID filtresi GEREKTİRMEZ** (modül 15 [DB6]). Bu tablolar `VeribranchTransactionName` ile sorgulanır. Diğer tüm CommonDb / MobileDefaultLog tablolarında ChannelID zorunludur.

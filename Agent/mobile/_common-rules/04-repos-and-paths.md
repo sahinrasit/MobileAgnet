@@ -45,7 +45,8 @@ Kod referansları aşağıdaki kalıba uyar:
 | State / recovery | `docs/.mobile-XX-state.json` (her agent için ayrı) |
 | Kullanıcı tercihleri | `docs/.mobile-preferences.json` |
 | Açık sorular | `questions.md` (proje kökü) |
-| Veritabanı dokümantasyonu | `mobilemenu-mssqlmcp.md` (proje kökü) |
+| Veritabanı kanonik referansı | `_common-rules/15-db-reference.md` (agent modülü — esas) |
+| Veritabanı dokümantasyonu (orijinal kaynak) | `mobilemenu-mssqlmcp.md` (proje kökü) |
 | Değişiklik geçmişi | `changelog.md` (proje kökü) |
 
 Yollar workspace-relative; absolute path kullanılmaz.

@@ -57,12 +57,20 @@ search_code(
 
 ## [C2.2] mcp-mssql-db-operations
 
+> **DB KANONİK REHBERİ:** Veritabanı işlemi yapmadan önce **`_common-rules/15-db-reference.md`** `Read` ile okunur (ilgili tablo bölümü [DB2]-[DB7]). Bu modül tüm tablo kolonları, MenuType (1-15), Configuration/Validation JSON, VpStringResource 3-dil insert şablonu, VpTransaction 3-tablo şablonu, MCS mapping sorguları, log tabloları ve ChannelID kurallarını (mapping istisnası dahil) içerir. (Kök `mobilemenu-mssqlmcp.md` aynı içeriğin orijinal kaynağıdır; modül 15 onun agent-yapısına uygun halidir.) Aşağıdaki liste özettir; **kolon/sorgu detayı için modül 15 esastır. Tablo/kolon bilgisi uydurulmaz.**
+
 **Veritabanları:**
 
-| DB | Tablolar |
-|------|----------|
-| **CommonDb** | MobileMenu, MobileMenuMapping, VpStringResource, VpTransaction, VpTransactionConfig, VpTransactionAttributes, VpVeriBranchHostCallMappingView, VpHostCallMappingDetail |
-| **MobileDefaultLog** | VpMobileContact, VpMobileContactHistory, VpDefaultLog, VpExceptionLog, VpTransactionHistoryLog |
+| DB | Tablolar | Ne İçin |
+|------|----------|---------|
+| **CommonDb** | MobileMenu | Menü öğeleri (MenuID, ParentID, Title=ResourceKey, TransactionName, EnabledTR/EN, AllUser, Configuration JSON, Validation JSON) |
+| **CommonDb** | MobileMenuMapping | Pano/NBT/3D Touch/Spotlight/Pega mapping (ReferenceID, MenuType 1-15, TitleKey) |
+| **CommonDb** | VpStringResource | Çoklu dil resource (ResourceType, ResourceKey, CultureCode en-US/tr-TR/ar-SA, ResourceValue) |
+| **CommonDb** | VpTransaction / VpTransactionConfig / VpTransactionAttributes | Transaction tanımı (3 tablo birlikte) |
+| **CommonDb** | VpVeriBranchHostCallMappingView / VpHostCallMappingDetail | MCS host mapping + input/output parametreleri (C17 — modül 10) |
+| **MobileDefaultLog** | VpMobileContact, VpMobileContactHistory, VpDefaultLog, VpExceptionLog, VpTransactionHistoryLog | Oturum / işlem / hata / log |
+
+> Sorguda yalnızca gerekli kolonlar `SELECT` edilir (tüm tablo değil); ChannelID filtresi zorunlu (modül 03). Sonuç büyükse daraltılır.
 
 **Tool şeması:**
 
