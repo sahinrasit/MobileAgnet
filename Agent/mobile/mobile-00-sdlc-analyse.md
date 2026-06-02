@@ -282,6 +282,113 @@ Her SDLC bölümünün hangi kaynaktan, hangi araçla, hangi tablo/sorgu/alan il
 
 ---
 
+## [A8] FIGMA KULLANIM REHBERİ (mcp-figma)
+
+Figma'dan veri çıkarımı yüzeysel kalmamalı. Node tipine göre ne çıkarılacağı:
+
+| Figma Node | Çıkarılacak | Hangi Bölüme |
+|-------------|-------------|----------------|
+| **Frame / Page** | Ekran adı + ekran sınırı | 4.1.X işlev başlığı + Ekran Tasarımı |
+| **Text layer** | Görünen metin → resource key adayı | 3.4.5 CMS tablosu + 4.1.X ekran metinleri |
+| **Component / Instance** | UI bileşeni (button, switch, picker, action sheet) | 4.1.X ekran komponent listesi |
+| **Component variant** | Durum farkı (açık/kapalı switch, hata/başarı) | 4.1.X koşullu davranış + 4.1.X.9 Uyarı/Hata |
+| **Frame adı / section** | Akış sırası (ekranlar arası geçiş) | 3.2 Mermaid akış |
+| **Annotation / comment** | Tasarımcı notu (validasyon, kural) | 4.1.X iş kuralı |
+
+**Görsel referans:** Her 4.1.X Ekran Tasarımı alt başlığında ilgili Figma frame'i referanslanır. Görsel adı `image-{ekran}-{tarih}.png` formatında belirtilir (örnekteki gibi: `image-2025-5-11_23-6-22.png`). Görsel dosyası elde edilemiyorsa Figma node linki / frame adı yazılır; "[GÖRSEL: {frame adı} — Figma'dan eklenecek]" notu düşülür (uydurma görsel adı YASAK).
+
+**Çıkarım kuralı:** Figma text layer'larındaki metinler 3.4.5 CMS resource key tablosuna aday olarak alınır; key adı [A10] convention ile türetilir; değer (tr-TR) Figma metnidir, en-US/ar-SA `[ÇEVİRİ GEREKLİ]`. Bu key'ler VpStringResource ([DB4]) ile doğrulanır.
+
+---
+
+## [A9] KARAR MATRİSİ KRİTERLERİ + INDEX NUMARALAMA
+
+### [A9.1] 11 Satır İçin Deterministik Evet/Hayır Kriteri
+
+Her 4.1.X işlevi için karar matrisi satırları aşağıdaki **somut kriterlere** göre işaretlenir (muğlak "varsa" değil):
+
+| # | Satır | "Evet" Kriteri | Kaynak |
+|---|-------|------------------|--------|
+| 1 | Ekran tasarımı / değişiklik | Figma'da yeni/değişen ekran VAR | Figma + kapsam |
+| 2 | Batch | **Mobilde her zaman Hayır** (default) | — |
+| 3 | Çıktı / Rapor | Ekrandan PDF/dekont/rapor indiriliyor | kapsam + semantic-search |
+| 4 | Menü tanımı | MobileMenu'da yeni/değişen kayıt gerekiyor ([DB2]) | mssql + kapsam |
+| 5 | Servis tanımı | Yeni MCS TransactionName gerekiyor ([DB5]/[DB6]); mevcutta yoksa | C17 + mssql |
+| 6 | Erişim noktaları | MobileMenuMapping'e (Pano/NBT/3D Touch/Spotlight) ekleme var ([DB3]) | mssql + kullanıcı |
+| 7 | SMS / PN | Yeni Form Code / NOTIFICATION template gerekiyor | semantic-search + kullanıcı |
+| 8 | E-mail | NOTIFICATION_EMAIL_TEMPLATE gerekiyor | kullanıcı |
+| 9 | Memo / Ekstre | İşlem memo / ekstre mesajı ekleniyor | kapsam + kullanıcı |
+| 10 | Uyarı / Hata | Yeni Validation Rule / ActionType / hata mesajı var ([DB2] Validation JSON) | Figma + semantic-search |
+| 11 | Etki Analizi | 3.4'te bu işlevle ilgili "Evet" işaretli madde var | 3.4 sonucu |
+
+> Kriter belirsizse [A1] gereği kullanıcıya sorulur (4.1 derinleştirme 13 sorusu ile uyumlu). Kriteri sağlanmayan satır **Hayır**'dır; "Hayır" satırlar standart cümleyle geçilir (modül 01 [C15]).
+
+### [A9.2] Index Numaralama Kuralı
+
+- Karar matrisinde **yalnızca "Evet" işaretli satırlar** 4.1.X.n biçiminde **ardışık** numaralanır. "Hayır" satırlar numaralanmaz, alt başlık açılmaz.
+- Örnek: bir işlevde Ekran=Evet, Uyarı/Hata=Evet, Etki=Evet ise → 4.1.1.1 (Ekran), 4.1.1.2 (Uyarı/Hata), 4.1.1.3 (Etki). Aradaki "Hayır"lar atlanır.
+- Index formatı **tutarlı**: `4.1.{işlev}.{sıra}` (örnekteki "4.11" gibi hatalı kısaltma YASAK).
+- Karar matrisi tablosundaki "Index" kolonu bu numarayı, "Başlık adı" kolonu işlev adını gösterir.
+
+---
+
+## [A10] İSİMLENDİRME CONVENTION'LARI
+
+### Resource Key (VpStringResource — [DB4])
+
+- **PascalCase**, anlamlı, modül/konu öneki ile. Örnek: `LoanExpensesDescription`, `LoanExpensesPopupTitle`, `CreditCardLimitDetailTitle`.
+- Kalıp: `{Konu}{Bileşen}{Tip}` — örn. `{LoanExpenses}{Popup}{Title}`.
+- Boşluk/Türkçe karakter YOK; benzersiz; ResourceType ile birlikte tekil.
+- Mevcut key varsa yeniden üretme — [DB4] ile kontrol et, varsa onu kullan.
+
+### TransactionName (VpTransaction — [DB5])
+
+- **PascalCase**. İki yaygın kalıp:
+  - Sorgu/okuma servisleri: `Get{Konu}` (örn. `GetCreditCardList`, `GetCardLimitInfo`).
+  - QNB iç servisleri: `Vb{Konu}` (örn. `VbKrediKartiBilgileri`).
+- Yeni servis önerirken kullanıcıya/standarda göre kalıp teyit edilir; mevcut servis varsa [DB6] mapping ile doğrulanır, yeniden türetilmez.
+
+### Menü / Mapping
+
+- `MenuID` benzersiz sayı (mevcut max + 1 önerilir, [DB2] ile kontrol). `Title` = ilgili resource key.
+
+> Convention dışı bir isim gerekiyorsa kullanıcıya sorulur; agent kendiliğinden farklı kalıp uydurmaz.
+
+---
+
+## [A11] BÖLÜM ONAYI + DOKÜMAN VERSİYONLAMA
+
+### [A11.1] Bölüm Bazlı Preview + Onay
+
+- **Büyük bölümler** (Bölüm 1, 3.4 grubu, her 4.1.X işlevi) doldurulduktan sonra kullanıcıya **özet/preview** gösterilir ve onay alınır:
+
+```
+AskUserQuestion(
+  questions: [{
+    question: "{{Bölüm}} dolduruldu. Onaylıyor musunuz?",
+    header: "Bölüm Onayı",
+    multiSelect: false,
+    options: [
+      { label: "Onayla, devam et", description: "Sonraki bölüme geç" },
+      { label: "Düzeltme istiyorum", description: "Neyi değiştireceğimi söyleyeceğim" },
+      { label: "Tümünü sonda gözden geçireyim", description: "Onayları sona bırak, kesintisiz devam et" }
+    ]
+  }]
+)
+```
+
+- Kullanıcı "tümünü sonda" derse: bölüm onayları atlanır, sadece Adım 4 self-review'da topluca sunulur (context/hız tercihi).
+- Default/etkisiz bölümler için ara onay sorulmaz (otomatik geçilir).
+
+### [A11.2] Doküman Versiyonlama (Değişiklik Tarihçesi Tablosu)
+
+- Çıktı dokümanının başındaki "Değişiklik Tarihçesi" tablosu her çalıştırmada güncellenir:
+  - İlk üretim → `v1`, "Doküman oluşturuldu."
+  - Tekrar çalıştırma / revizyon → `v2`, `v3`... satır **eklenir** (eski satır silinmez); değişiklik özeti yazılır (örn. "4.1.2 onay ekranı güncellendi").
+- Versiyon, `docs/.mobile-00-state.json`'da da tutulur; SemVer/changelog ayrı (modül 09) — doküman-içi tablo iş birimi içindir, changelog.md teknik kayıt içindir.
+
+---
+
 ## BÖLÜM BAZLI DOLDURMA KURALLARI (Kullanıcı Dikte — Kanonik)
 
 > Bu bölüm, her SDLC maddesinin nasıl doldurulacağına dair kullanıcının dikte ettiği kuralları içerir. Agent her maddeyi doldururken buradaki kuralı uygular. Kural tanımlı değilse [A1] röportaj moduna düşer (kullanıcıya sorar).
@@ -431,7 +538,9 @@ AskUserQuestion(
 
 #### 4.1.X Karar Matrisi (her işlev için)
 
-Her işlevin altında karar matrisi doldurulur (Evet/Hayır + index + başlık adı). Matris sırası: Ekran tasarımı → Batch → Çıktı/Rapor → Menü → Servis → Erişim noktaları → SMS/PN → E-mail → Memo/Ekstre → Uyarı/Hata → Etki Analizi. "Evet" olanlar detaylandırılır; "Hayır" olanlar standart cümleyle geçilir (modül 01 [C15]).
+Her işlevin altında karar matrisi doldurulur (Evet/Hayır + index + başlık adı). Matris sırası: Ekran tasarımı → Batch → Çıktı/Rapor → Menü → Servis → Erişim noktaları → SMS/PN → E-mail → Memo/Ekstre → Uyarı/Hata → Etki Analizi.
+
+> **Evet/Hayır kriterleri ve index numaralama için [A9]'a bak** — her satırın deterministik kriteri vardır; yalnızca "Evet" satırlar `4.1.X.n` biçiminde ardışık numaralanır. "Hayır" olanlar standart cümleyle geçilir (modül 01 [C15]).
 
 #### 4.1 Derinleştirme Soruları (Kullanıcıya Sorulacak — ZORUNLU)
 
@@ -605,9 +714,11 @@ Template sırasıyla her bölüm için, bu agent dosyasındaki **"BÖLÜM BAZLI 
 
 Her bölüm doldurulunca `docs/mobile-sdlc-analiz.md`'yi Edit ile güncelle; ilerlemeyi `docs/.mobile-00-state.json`'a yaz ([DOLDURULDU]/[BEKLENIYOR]/[ATLANDI]). Çıktı boyutu büyükse (>2500 satır, çok işlev) modül 05 [C9] parça stratejisi uygulanır.
 
+> **4.1 işlevleri için:** karar matrisi [A9] kriterleriyle doldurulur, index [A9.2] ile numaralanır; ekran tasarımı [A8] Figma rehberiyle; yeni resource/TransactionName [A10] convention ile. Her büyük bölüm sonrası [A11.1] preview+onay (kullanıcı "sonda" demediyse).
+
 ### Adım 3: Ara Özetler
 
-Her bölüm grubunda (1-2, 3.x, 4.1, 4.2-4.4, 5.x) bir: "İlerleme: X/N bölüm tamamlandı. Devam edelim mi?"
+Her bölüm grubunda (1-2, 3.x, 4.1, 4.2-4.4, 5.x) bir: "İlerleme: X/N bölüm tamamlandı. Devam edelim mi?" Büyük bölüm onayları [A11.1]'e göre alınır.
 
 ### Adım 4: Tamamlama, Self-Review ve Doğrulama ([A6.6])
 
@@ -619,13 +730,39 @@ Tüm bölümler dolduğunda:
 4. **Subagent doğrulama ([A6.6.2]):** Kapsam büyükse (3+ işlev veya finansal işlem) bağımsız doğrulama subagent'i çalıştır.
 5. **Completeness raporu:** `docs/.mobile-00-completeness.md` (modül 14) — bölüm doluluk skoru, `[BELIRSIZ]`/`[ACIK]` listesi, cross-reference + subagent bulguları.
 
-### Adım 5: Sunum ve Diğer Agentlara Bağlama
+### Adım 4.7: Handoff Özeti Üret (Sonraki Agentlar İçin — Context Kazancı)
 
-- `docs/mobile-sdlc-analiz.md` (kullanıcı deliverable'ı) + `docs/.mobile-00-completeness.md` kullanıcıya sun.
+`docs/.mobile-00-summary.json` üret — sonraki agentlar (mobile-01..05) koca dokümanı baştan okumadan kapsamı anlasın:
+
+```json
+{
+  "version": "1.0.0",
+  "doc_path": "docs/mobile-sdlc-analiz.md",
+  "doc_size_lines": 0,
+  "generated_at": "...",
+  "proje": { "kod": "...", "ad": "...", "gelistirme_tipi": "mevcut/yeni" },
+  "islevler": [
+    { "no": "4.1.1", "ad": "...", "karar_matrisi": { "ekran": "Evet", "menu": "Hayır", "servis": "Evet", "...": "..." } }
+  ],
+  "yeni_transactionlar": ["GetCreditCardLimitDetail"],
+  "yeni_resource_keys": ["LoanExpensesDescription"],
+  "menu_degisiklikleri": [ { "MenuID": 0, "tip": "yeni/değişen" } ],
+  "etki_3_4": { "kanal": "...", "cms": "var", "sas_fraud": "...", "...": "..." },
+  "loglama_4_3": ["EDW Extra Field", "Contact History"],
+  "belirsiz_acik": ["3.4.4 chatbot eksik"]
+}
+```
+
+> mobile-01/02/03/04/05 önce bu summary'yi okur, gerekli yerlerde tam dokümana iner. mobile-05 `yeni_transactionlar` + `yeni_resource_keys` + `menu_degisiklikleri`'ni doğrudan script kaynağı alır.
+
+### Adım 5: Sunum, Versiyonlama ve Diğer Agentlara Bağlama
+
+- **Doküman versiyonlama ([A11.2]):** Çıktı başındaki "Değişiklik Tarihçesi" tablosunu güncelle (ilk üretim v1; revizyon v2/v3 satır ekle).
+- `docs/mobile-sdlc-analiz.md` (deliverable) + `docs/.mobile-00-completeness.md` + `docs/.mobile-00-summary.json` kullanıcıya/sonraki agentlara hazırla.
 - changelog.md güncelle (modül 09).
 - Bilgi ver:
 
-> "docs/mobile-sdlc-analiz.md hazır. Bu doküman bundan sonra:
+> "docs/mobile-sdlc-analiz.md hazır. Handoff özeti docs/.mobile-00-summary.json üretildi. Bu doküman bundan sonra:
 > - mobile-01 (AS-IS) için temel bağlam
 > - mobile-02 (Analiz), mobile-03 (Test), mobile-04 (Etki), mobile-05 (Script) için girdi
 > Sıradaki adım: `/mobile-01-analyze-as-is` veya `/mobile-orchestrator`"
@@ -637,6 +774,7 @@ Tüm bölümler dolduğunda:
 - **Kullanıcı deliverable'ı:** `docs/mobile-sdlc-analiz.md` (template yapısında, gerçek içerikle dolu).
 - **Template (kullanıcıya verilmez):** `Templates/mobile/sdlc-analiz.template.md`.
 - **Few-shot örnek (kullanıcıya verilmez):** `Templates/mobile/sdlc-analiz.ornek.md`.
+- **Handoff özeti (sonraki agentlara):** `docs/.mobile-00-summary.json`.
 - **State:** `docs/.mobile-00-state.json` | **Completeness:** `docs/.mobile-00-completeness.md`.
 
 Dil: Türkçe (common-rules [C1]).
