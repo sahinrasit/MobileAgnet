@@ -108,9 +108,17 @@ classDef yeni fill:#cce5ff,stroke:#004085,color:#000;
 > Etki analizi POTA Impact Analysis sayfasında bulunur: {{POTA_LINK}}
 
 #### 3.4.1 Kanal (ADK) Etkisi
-> **Sor:** Mobil varsayılan var; sadece tüzel etkisi sorulur. Diğer kanallar dökümanda/MCP'de varsa eklenir.
+> **Sor:** Mobil varsayılan var; sadece tüzel etkisi sorulur. Diğer kanallar dökümanda/MCP'de varsa eklenir. Tablo formatı zorunlu.
 
-{{KANAL_ETKISI}}
+| Kanal | Etki Durumu | Not |
+|-------|-------------|-----|
+| QNB Mobil — Bireysel | {{Var/Yok}} | {{detay}} |
+| QNB Mobil — Tüzel | {{Var/Yok}} | {{detay}} |
+| QNB İnternet Bankacılığı (IB) | {{Var/Yok}} | {{detay}} |
+| Enpara | {{Var/Yok}} | {{detay}} |
+| Çağrı Merkezi (CC) | {{Var/Yok}} | {{detay}} |
+| ATM | {{Var/Yok}} | {{detay}} |
+| Web Şubesi | {{Var/Yok}} | {{detay}} |
 
 #### 3.4.2 Engelsiz Bankacılık Etkisi
 > **Sor (var/yok):** Yok ise "Internet veya Mobil uygulamalara etkisi yoktur." Var ise HPC + Sözleşme tablosu.
@@ -169,26 +177,39 @@ Anomali takibi ihtiyacı bulunmamaktadır.
 
 #### 4.1.{{N}} {{Ekran/İşlev Adı}} Yazılım İşlevi
 
-> Aşağıdaki 6 bölüm sırasıyla doldurulur ([A12]+[A13]+[A14] disiplinine göre). Sıra değiştirilemez.
+> Aşağıdaki 8 bölüm sırasıyla doldurulur ([A12]+[A13]+[A14]+[A15]+[A16]+[A17] disiplinine göre). Sıra değiştirilemez.
 
-**Bağlam:** {{İşlev hangi iş ihtiyacını karşılıyor; mevcut akışla nasıl ilişkili; mevcut ek mi yeni mi}}
+**1. Bağlam:** {{İşlev hangi iş ihtiyacını karşılıyor; mevcut akışla nasıl ilişkili; mevcut ek mi yeni mi}}
 
-**Ekran konumu ve giriş noktası:**
+**2. Ekran konumu ve giriş noktası:**
 - Yerleşim tipi: {{Yeni sekme / Mevcut sekme içine bölüm / Hibrit}}
 - Konum referansı: {{Hangi mevcut elemanın altında/üstünde/yanında}}
-- Görünürlük koşulu: {{Her zaman / koşullu (koşulu açıkça yaz)}}
+- Görünürlük koşulu: {{Her zaman / koşullu — koşulu açıkça yaz}}
+- Figma frame: {{Frame adı + node-id}} veya `[GÖRSEL: {{frame adı}} — Figma'dan eklenecek]`
 
-**Yeni davranışlar:**
+**3. Yeni davranışlar:**
 - {{Bullet 1 — tek bir yetenek; konumu, davranışı, tetiklenme koşulu}}
 - {{Bullet 2}}
 - ...
 
-**Durum bazlı kurallar:**
+**4. Durum bazlı kurallar (görünürlük/koşul) ve sıralı akışlar (aksiyon zinciri):**
 - **{{Durum A}} ise:** {{davranış}}
 - **{{Durum A değil ise (else)}}:** {{davranış}}
 - **{{Edge case — örn. tüm kayıtlar silindi}}:** {{davranış}}
+- Aksiyon zinciri varsa (örn. popup butonları): 1. {{adım}} 2. {{adım}} 3. {{adım}}
 
-**Gösterilen metinler ve gösterim tipi:**
+**5. Form validasyonu — varsa ([A16]):**
+
+| Alan | Zorunluluk | Format / Tip | Uzunluk / Aralık | İş Kuralı | Hata Metni | Hata Gösterim Tipi |
+|------|------------|--------------|------------------|-----------|------------|---------------------|
+| {{Alan}} | {{Zorunlu/Opsiyonel}} | {{Sayı/Metin/Tarih/Seçim}} | {{Min-Maks}} | {{Kural}} | {{Tam Türkçe metin}} | {{Inline/Popup/Toast}} |
+
+Çapraz alan validasyonları:
+- {{Kural — örn. "Alış ve satış aynı seçilemez."}}
+
+Form yoksa: "Bu işlevde alan-bazlı validasyon bulunmamaktadır."
+
+**6. Gösterilen metinler ve gösterim tipi:**
 
 | Metin (tam Türkçe) | Gösterim Tipi | Tetiklenme Koşulu | Buton/Aksiyon |
 |---------------------|---------------|-------------------|----------------|
@@ -196,12 +217,21 @@ Anomali takibi ihtiyacı bulunmamaktadır.
 
 > Resource key bu tablo içine YAZILMAZ — yalnızca 3.4.5 CMS tablosunda yer alır.
 
-**Hata, sınır ve eski client:**
+**7. Hata, sınır, eski client + servis sözleşmesi:**
 - **Servis hatası:** {{Hangi ekran/popup, hangi metin}}
 - **Boş yanıt:** {{Boş durum metni + CTA}}
 - **Timeout:** {{Tekrar dene davranışı}}
 - **Maks sınır:** {{Üst sınır + aşıldığında davranış}}
 - **Eski client davranışı:** "Eski client'larda yeni {{X}} gösterilmez; mevcut akış değişmeden devam eder."
+- **Yeni servis = Evet ise:** [A17.1] Servis Sözleşmesi Bloğu (TransactionName / Request / Response / HPC / handler / mevcut servis aramaları).
+- **Mevcut servis genişletiliyorsa:** [A17.2] Reuse Bloğu.
+
+**8. Sonraki adım / İlişkili işlevler:**
+- Başarılı tamamlama → {{4.1.Y İşlev Adı}}
+- Hata yolunda → {{4.1.Z / aynı ekran}}
+- Detay/listeleme referansı → {{4.1.W'de detaylandırılmıştır}}
+- Geri tuşu → {{4.1.V}}
+- Hedef ekran(lar) yeni mi mevcut mu: {{ne olduğu net yazılır — [A15.3]}}
 
 **4.1.{{N}} Karar Matrisi (Yalnızca Evet Satırları):**
 
@@ -212,7 +242,10 @@ Anomali takibi ihtiyacı bulunmamaktadır.
 > Tam 11 satırlı karar değerlendirmesi doküman sonundaki **4.1 Özet Karar Matrisi**'nde yer alır. "Hayır" satırlar burada tekrar yazılmaz.
 
 ##### 4.1.{{N}} Ekran Tasarımı
-{{FIGMA_REFERANSI / EKRAN_GORSEL}}
+
+| Figma Frame Adı | node-id | Görsel Dosya |
+|------------------|---------|---------------|
+| {{Frame adı}} | {{node-id}} | `image-{{ekran}}-{{tarih}}.png` veya `[GÖRSEL: Figma'dan eklenecek]` |
 
 ---
 
@@ -236,19 +269,21 @@ Anomali takibi ihtiyacı bulunmamaktadır.
 
 #### 4.1 Derinleştirme Kararları (Kapsam Geneli)
 
-| Soru | Karar | Not |
-|------|-------|-----|
-| Segmente göre farklılık olacak mı? | {{...}} | |
-| Yeni HPC tanımlanmalı mı? | {{...}} | |
-| Pilot kontrolü yapılacak mı? | {{...}} | |
-| Eski client etkisi var mı? | {{...}} | Eski client'ta davranış: "Yeni {{X}} gösterilmez; mevcut akış değişmeden devam eder." |
-| Force update ihtiyacı var mı? | {{...}} | |
-| TrackMobileEvent loglama ihtiyacı var mı? | {{...}} | |
-| SAS loglama ihtiyacı var mı? | {{...}} | |
-| Dataroid etkisi var mı? | {{...}} | |
-| Adjust etkisi var mı? | {{...}} | |
-| Kart maskeleme ihtiyacı var mı? | {{...}} | |
-| İngilizce ve Arapça menülere etki var mı? | {{...}} | |
+> 4 sütunlu yapı zorunlu ([A18.1]): serbest metin yerine "Aşama / Build / Etki" sütununa somut detay yazılır.
+
+| Soru | Karar (Evet/Hayır/Belirsiz) | Aşama / Build / Etki | Not |
+|------|-----------------------------|-----------------------|-----|
+| Segmente göre farklılık olacak mı? | {{...}} | {{Hangi segment(ler)de farklı davranış, hangi 4.1.X'te}} | |
+| Yeni HPC tanımlanmalı mı? | {{...}} | {{HPC değeri veya [BELIRSIZ — HPC ekibi atayacak]; ilgili servis: TransactionName}} | |
+| Pilot kontrolü yapılacak mı? | {{...}} | {{Hangi ekran/aksiyonda kontrol; pilot grup segmenti; pilot key adı}} | [A18.2] |
+| Eski client etkisi var mı? | {{...}} | MinBuildNumber: {{X}}; davranış: "Yeni {{X}} gösterilmez; mevcut akış değişmeden devam eder." | [A13.4] |
+| Force update ihtiyacı var mı? | {{...}} | {{Hangi sürüm öncesi force update; gerekçe}} | |
+| TrackMobileEvent loglama ihtiyacı var mı? | {{...}} | {{Somut event listesi}} veya "Loglama detayı teknik tasarım aşamasında netleştirilecektir." | [A14.3] |
+| SAS loglama ihtiyacı var mı? | {{...}} | {{Hangi event'lerde SAS gönderimi}} | |
+| Dataroid etkisi var mı? | {{...}} | {{Hangi screen view + custom event}} | |
+| Adjust etkisi var mı? | {{...}} | {{Hangi attribution event'i}} | |
+| Kart maskeleme ihtiyacı var mı? | {{...}} | {{Akışta kart varsa nerede maskelenir}} | |
+| İngilizce ve Arapça menülere etki var mı? | {{...}} | 3.4.5 CMS tablosunda en-US ve ar-SA durumu; [ÇEVİRİ GEREKLİ] takip listesi | |
 
 ### 4.2 Muhasebe, Dekont, Alındılar ve Sistem Mizan
 > **Default:** "Muhasebe, Dekont, Alındılar ve Sistem Mizan etkisi yoktur."

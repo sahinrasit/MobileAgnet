@@ -229,6 +229,11 @@ Bu agent çok sayıda harici kaynak (Confluence, kapsam dökümanı, Figma, code
 | 13 | **Muğlak ifade taraması** ([A14.1]) | "uygun metin", "uygun yere", "bu akış gibi", "ihtiyaç olarak işaretlenmiştir", "Confluence kaynağı paylaşılmadığı için..." gibi ifadeler taranıp temizlenir |
 | 14 | **Yazım taraması** ([C1.1]) | "döküman", "tab" (sekme yerine), "pop up" gibi yanlış yazımlar düzeltilir |
 | 15 | **Loglama somutluğu** | 4.3.1 yazıları somut event listesi içeriyor; "ihtiyaç olarak işaretlenmiş" muğlak kapatma yok |
+| 16 | **Müşteri yolculuğu sürekliliği** ([A15]) | Her 4.1.X "Sonraki adım / İlişkili işlevler" bölümünü içeriyor; başka ekrana referanslar 4.1.X kodu ile veriliyor; hedef ekran yeni/mevcut açık |
+| 17 | **Form validasyon kapsamı** ([A16]) | Form içeren her 4.1.X'te alan-bazlı validasyon tablosu (zorunluluk/format/aralık/iş kuralı/hata metni/gösterim tipi) doldurulmuş; çapraz alan validasyonu listelenmiş |
+| 18 | **Servis sözleşmesi bütünlüğü** ([A17]) | "Yeni servis = Evet" işaretli her işlevde [A17.1] bloğu (TransactionName + Request + Response + HPC + handler + mevcut servis aramaları) dolu; mevcut servis genişletmesi varsa [A17.2] |
+| 19 | **Derinleştirme tablosu 4 sütunlu** ([A18]) | 4.1 sonu Derinleştirme tablosu "Aşama / Build / Etki" sütununa somut detay içeriyor; serbest "Evet"/"Yok" tek başına yetersiz |
+| 20 | **Figma frame referansı** ([A8] + 4.1.X step 2) | Her 4.1.X Ekran Tasarımı alt başlığında Figma frame adı / node-id veya `[GÖRSEL: ... — Figma'dan eklenecek]` notu mevcut |
 
 Tutarsızlık bulunursa: ilgili bölüm düzeltilir veya `[ACIK]` olarak işaretlenip kullanıcıya bildirilir.
 
@@ -508,6 +513,19 @@ Her popup için aşağıdaki 5 alan eksiksiz yazılır:
 - Örnek (eksik): "Bildirim izni yoksa popup açılır." → Yetersiz.
 - Örnek (yeterli): "Bildirim izni yoksa popup açılır; bildirim izni varsa popup gösterilmez, kullanıcı doğrudan Yeni Alarm Kur ekranına yönlendirilir."
 
+#### [A13.1.1] Sıralı (Procedural) vs Durum-Bazlı (State-Grouped) Yazım — Hangisi Ne Zaman?
+
+İkisi de meşrudur; doğru olanı yazım hedefine göre seçilir:
+
+| Tip | Ne Zaman Tercih Edilir | Örnek |
+|-----|------------------------|-------|
+| **Sıralı maddeleme (1, 2, 3, ...)** | Kullanıcının lineer aksiyon adımları (buton tıklama akışı, popup buton zinciri, form submit sırası) | Popup içinde "Vazgeç" / "Onayla" davranışı; tarih seçiciyi açma → tarih seçme → onaylama |
+| **Durum-bazlı gruplar ("X durumunda" / "Y durumunda")** | Görünürlük kuralları, edge case'ler, segment/koşul bazlı davranışlar | Sekme görünürlüğü (aktif kayıt varsa/yoksa); izin var/yok davranışı; eski client/yeni client farkı |
+
+> **Reviewer 1 eleştirisi:** "Sekme görünürlük kuralları aşağıdaki sırayla uygulanır: 1. Aktif kayıt sorgulanır 2. Yoksa sekme gösterilmez 3. İlk kayıt sonrası sekme gösterilir 4. Hepsi silinse de sekme görünür kalır." biçimi sıralı yazıldı ama aslında **durum bazlı** anlatılmalıydı. Doğrusu: "Kullanıcının aktif kaydı varsa sekme görünür; yoksa ilk kayıt oluşana kadar sekme gizlenir; ilk kayıttan sonra (tüm kayıtlar silinse bile) sekme kalıcı olarak görünür."
+>
+> Tetik aksiyonu varsa sıralı, görünürlük/state karşılaştırması varsa durum-bazlı tercih edilir.
+
 ### [A13.2] Servis Hatası ve Boş Yanıt Senaryoları
 
 Yeni veya değişen her servis için aşağıdaki senaryolar mutlaka ele alınır:
@@ -583,6 +601,172 @@ Bilgi netleşmemişse uydurmak yerine:
 - **"sekme"** (sekme YT: tab) — "tab" yerine her zaman "sekme".
 - **"sayfa" / "ekran"** ayrımı: sayfa = belirli bir route/rota; ekran = bir sayfanın görünür hâli.
 - Self-review (Adım 4) typo taramasında bu liste uygulanır.
+
+---
+
+## [A15] MÜŞTERİ YOLCULUĞU SÜREKLİLİĞİ (Function-to-Function Continuity)
+
+> Reviewer 1 eleştirisi: "4.1.4'te 'Kullanıcı liste satırına tıklayarak detay ekranına gider.' deyip akış kopuyor; detay ekran yeni mi mevcut mu, hangi maddede detaylanıyor belirtilmemiş." Bu disiplin tüm özellikler için geçerlidir.
+
+### [A15.1] 4.1.X Sıralaması = Müşteri Yolculuğu Sırası
+
+- 4.1.X işlevleri **alfabetik veya rastgele değil**, müşteri yolculuğu sırasıyla numaralanır:
+  - Giriş noktası → Form/seçim → Validasyon → Onay → Sonuç → Liste/Yönetim → Detay/Güncelle/Sil → Boş durum/Bitiş.
+- Yolculuk dallanıyorsa (örn. izin akışı + ana akış) ana akış 4.1.X, dallar 4.1.X.alt veya sonraki 4.1.X+1 olarak ele alınır; sıra **3.2 Mermaid akışı ile birebir uyumlu** olur.
+
+### [A15.2] "Sonraki Adım / İlişkili İşlevler" Satırı — ZORUNLU
+
+Her 4.1.X iskeletinin sonunda **7. bölüm** olarak "Sonraki Adım / İlişkili İşlevler" satırı yer alır:
+
+| Bilgi | Format |
+|-------|--------|
+| Bu işlevin tetiklediği sonraki işlev | "Başarılı tamamlamada **4.1.Y {{İşlev Adı}}**'ya yönlendirilir." |
+| Hata yolunda yönlendirme | "Hata durumunda 4.1.Z'ye / aynı ekranda kalınır." |
+| Referans verilen başka işlev | "Detay ekranı **4.1.W'de** detaylandırılmıştır." |
+| Geri (back) ile dönülen ekran | "Geri tuşu **4.1.V**'ye döner." |
+
+> "Detay ekranına gider", "listeye yönlendirilir" gibi referanssız cümleler **YASAK**. Her hedef ekran 4.1.X kodu ile **kesin referans**lanır.
+
+### [A15.3] Hedef Ekran: Yeni mi, Mevcut mu? — ZORUNLU AÇIKLAMA
+
+Bir 4.1.X başka bir ekrana yönlendiriyorsa:
+
+- **Yeni bir ekrana yönlendiriyorsa:** "Detay ekranı yeni bir ekrandır; gereksinimleri 4.1.{{Y}}'de detaylandırılmıştır."
+- **Mevcut bir ekrana yönlendiriyorsa:** "Detay ekranı mevcut **{{ekran adı}}** ekranıdır; bu özellik kapsamında ekranın {{X}} bölümü güncellenmektedir (4.1.{{Y}})."
+- Cevap belirsizse `[BELIRSIZ — hedef ekran yeni/mevcut netleştirilecek]`.
+
+### [A15.4] Aksiyon → Sonuç → Sonraki Adım Üçlüsü
+
+Her kullanıcı aksiyonu (buton tıklama, swipe, picker seçimi) **tek bir akış halinde** yazılır:
+
+| Aksiyon | Sistem Sonucu | Sonraki Adım |
+|---------|---------------|---------------|
+| "Alarm Kur" butonuna tıklama | Validasyon + kur uyarı popup'ı koşullu, başarılıysa servis çağrısı | Başarı → 4.1.6 toast + 4.1.X'e yönlendirme; Hata → aynı ekran + inline hata |
+
+> Aksiyon-sonuç-sonraki adım üçlüsü kopuksa cümle **yarım kalmış** sayılır ve self-review düzeltir.
+
+---
+
+## [A16] FORM VALİDASYON DİSİPLİNİ (Field-Level Validation Spec)
+
+> Reviewer 1: "Ekransal validasyonlar eksik. Servis hata alırsa ne olacak generic hata ekranı mı gösterilecek gibi. Kaç tane alarm kurabilir, maks sınırı aşarsa hata mesajı mı verilir gibi." Servis hatasını [A13.2] ele aldı; bu bölüm **alan-bazlı (field-level) validasyon**ları tanımlar.
+
+### [A16.1] Form Validasyon Tablosu — ZORUNLU (form içeren her 4.1.X için)
+
+Form / input içeren her 4.1.X işlevinde aşağıdaki tablo zorunludur:
+
+| Alan | Zorunluluk | Format / Tip | Uzunluk / Aralık | İş Kuralı | Hata Metni (tam Türkçe) | Hata Gösterim Tipi |
+|------|------------|--------------|------------------|-----------|---------------------------|---------------------|
+| {{Alan Adı}} | Zorunlu / Opsiyonel | Sayı / Metin / Tarih / Seçim / Para | Min-Maks | "X = Y ise zorunlu", "Aynı değer iki kez seçilemez" | "Lütfen geçerli bir tutar girin." | Inline (alan altı) / Popup / Toast |
+
+### [A16.2] Validasyon Zamanı — Anlık vs Submit-time
+
+Her validasyon için tetiklenme zamanı belirtilir:
+
+- **Anlık (on-change):** Kullanıcı yazarken/seçerken kontrol; hata anında inline gösterilir.
+- **Odak kaybında (on-blur):** Kullanıcı alandan ayrıldığında kontrol.
+- **Submit-time:** "Devam et / Onayla" butonuna basıldığında kontrol.
+
+> Buton durumu (aktif/pasif) validasyon sonucuna bağlanır: "Tüm zorunlu alanlar geçerli ise buton aktif; aksi halde pasif."
+
+### [A16.3] Çapraz Alan Validasyonu (Cross-Field)
+
+İki veya daha fazla alanı kapsayan iş kuralları **ayrı bir alt başlık** olarak listelenir. Örnek:
+
+- "Alış ve satış döviz cinsi aynı seçilemez. Aynı değer seçildiğinde 'Aynı döviz cinsi seçemezsiniz.' popup'ı gösterilir; popup tek 'Tamam' butonludur ve alan sıfırlanır."
+
+### [A16.4] Servis Validasyon Hataları (Server-Side Validation)
+
+Servis sözleşmesinden gelen iş kuralı hataları (örn. müşterinin maks alarm sayısı aşıldı) [A13.2] hata senaryosu tablosuna işlenir; ek olarak **inline veya popup** olarak hangi metinle gösterileceği yazılır.
+
+---
+
+## [A17] SERVİS SÖZLEŞMESİ MİNİ-ŞABLONU (Yeni Servis = Evet Durumu)
+
+> [A9.3] gereği "Yeni servis = Evet" yazılabilmesi için mevcut MCS incelemesi yapılmış olmalı. Bu bölüm, yapılandırılmış servis sözleşmesi çıktısının formatını tanımlar.
+
+### [A17.1] Yeni Servis Sözleşmesi Bloğu — Her Yeni Servis İçin
+
+İlgili 4.1.X işlevinin "Servisler" alt başlığında veya doküman sonundaki Servis Listesi'nde aşağıdaki blok zorunludur:
+
+```
+TransactionName: {{ÖnerilenAd}} (PascalCase, [A10] convention)
+Tip: Sorgu / Yazma / Komut
+Kullanıldığı 4.1.X: 4.1.{{N}} {{İşlev Adı}}
+ChannelID: 10 (mobil); fallback {{20/30/40/50}} kullanılacaksa neden
+HostProcessCode (HPC): {{HPC değeri}} | [BELIRSIZ — HPC ekibi onayı bekleniyor]
+Handler dosyası (önerilen): mwbackend/.../{{HandlerSınıfı}}.cs
+
+Request parametreleri:
+- {{ParamAdı}} ({{Tip}}, zorunlu/opsiyonel) — {{açıklama}}
+
+Response parametreleri:
+- {{ParamAdı}} ({{Tip}}) — {{açıklama}}
+
+İş kuralları (servis tarafı):
+- {{kural 1}}
+- {{kural 2}}
+
+Mevcut servis aramaları:
+- Denenen 1: {{TransactionName}} — uygunsuz çünkü {{neden}}
+- Denenen 2: {{TransactionName}} — uygunsuz çünkü {{neden}}
+
+Doğrulanan kaynak: VpTransaction/Config/Attributes ([DB5]/[DB6]) — {{tarih}}
+```
+
+### [A17.2] Mevcut Servis Yeniden Kullanımı (Reuse) Bloğu
+
+Mevcut bir servis genişletiliyorsa veya yeniden kullanılıyorsa:
+
+```
+TransactionName: {{MevcutAd}} (mevcut)
+Değişiklik tipi: Yeni input param / Yeni response field / Yeni iş kuralı / Yok (yalnızca çağrı)
+Etkilenen sözleşme: Var / Yok (varsa sözleşme değişikliği detayı)
+Kanal etkisi: Diğer kanallar (IB, ATM, Web) etkileniyor mu? Etkileniyorsa kim yönetir?
+```
+
+### [A17.3] Servis Sözleşmesi Belirsizse
+
+Servis detayı henüz teknik tasarımda netleşmemişse:
+
+> "Servis sözleşmesi mwbackend incelemesi ve teknik tasarım aşamasında netleştirilecektir. Şu an için kullanılacak veri alanları yaklaşık olarak {{liste}} biçimindedir; nihai input/output sözleşmesi C17 (modül 10) ve VeriBranchBI sözleşmesi ile doğrulanacaktır."
+
+---
+
+## [A18] PİLOT / HPC / FORCE UPDATE YAPILANDIRILMIŞ CEVAP
+
+> "Pilot kontrolü yapılacak mı? / Yeni HPC tanımlanmalı mı? / Force update gerekli mi?" sorularına evet/hayır cevabı yetersiz. Yapılandırılmış cevap zorunlu.
+
+### [A18.1] Yapılandırılmış Derinleştirme Tablosu
+
+Bölüm 4.1 sonundaki "Derinleştirme Kararları" tablosu **iki sütun yerine dört sütunlu** yazılır:
+
+| Soru | Karar (Evet/Hayır/Belirsiz) | Aşama / Build / Etki | Not |
+|------|-----------------------------|----------------------|-----|
+| Pilot kontrolü yapılacak mı? | Evet | Hangi ekranda pilot kontrolü var (Alarm Gözlem sekmesi açılışında); pilot grubu segmenti | |
+| Yeni HPC tanımlanmalı mı? | Evet | HPC değeri [BELIRSIZ — HPC ekibi atayacak]; ilgili servis: {{TransactionName}} | |
+| Eski client etkisi var mı? | Evet | MinBuildNumber: {{X}}; eski client davranışı: "{{Yeni X gösterilmez, mevcut akış devam eder}}" | [A13.4] |
+| Force update ihtiyacı var mı? | Hayır | — | Pilot kontrolü ile geriye uyumluluk sağlanır |
+| TrackMobileEvent loglama? | Evet | Event'ler: {{liste — somut}} | [A14.3] belirsizse fallback |
+| SAS loglama? | Evet | Hangi event'lerde SAS gönderimi: {{liste}} | |
+| Dataroid? | Evet | Hangi screen view + custom event | |
+| Adjust? | Evet | Hangi attribution event'i | |
+| Kart maskeleme? | Hayır | Akışta kart bilgisi yok | |
+| İngilizce/Arapça menü? | Evet | 3.4.5 CMS tablosunda en-US ve ar-SA değerleri eksiksiz | [ÇEVİRİ GEREKLİ] satırlar takip ediliyor |
+
+### [A18.2] Pilot Kontrolü Yapılandırılmış Cevap
+
+Pilot = Evet ise mutlaka açıklanır:
+
+- **Hangi ekranda / aksiyonda kontrol var:** "Alarm Gözlem sekmesi her açılışta Pilot.IsEnabled kontrolü yapılır."
+- **Pilot kapalıysa davranış:** "Yeni bileşenler gizlenir; mevcut akış değişmeden devam eder."
+- **Pilot grup tanımı:** "Hangi segment / hangi % kullanıcı / hangi pilot key (örn. PilotKey: CurrencyAlarm)"
+- **MinBuildNumber etkileşimi:** "Pilot grubu içinde bile eski client'larda gösterilmez."
+
+### [A18.3] HPC ve Force Update Disiplini
+
+- **HPC tanımı zorunlu ise:** TransactionName + HPC değeri (veya `[BELIRSIZ — HPC ekibi atayacak]`) + yeni HPC için iş kuralı (örn. müşteri tipi kontrolü).
+- **Force update gerekli ise:** Hangi sürüm öncesinde force update tetiklenir + force update gerekçesi (örn. eski client'larda kritik güvenlik akışı).
 
 ---
 
@@ -736,7 +920,7 @@ AskUserQuestion(
 
 #### 4.1.X İşlev Yazım Şablonu (ZORUNLU İskelet — Her Özellik İçin)
 
-Her 4.1.X işlevi aşağıdaki 6 bölümlü iskeletle yazılır. **Sıra değiştirilemez, atlama yapılamaz.** Bir bölüm boş kalıyorsa standart "etkisiz" cümlesi (modül 01 [C15]) yazılır; başlık silinmez.
+Her 4.1.X işlevi aşağıdaki **8 bölümlü iskeletle** yazılır. **Sıra değiştirilemez, atlama yapılamaz.** Bir bölüm boş kalıyorsa standart "etkisiz" cümlesi (modül 01 [C15]) yazılır; başlık silinmez.
 
 1. **Bağlam paragrafı (1-3 cümle):**
    - Bu işlev hangi iş ihtiyacını karşılıyor; mevcut akışla nasıl ilişkili; geliştirme tipi (mevcut ek / yeni).
@@ -744,24 +928,37 @@ Her 4.1.X işlevi aşağıdaki 6 bölümlü iskeletle yazılır. **Sıra değiş
    - Yeni sekme mi, mevcut sekme içine mi? (cevap netleştirilmiş haliyle)
    - Konum referansı (hangi mevcut elemanın altında/üstünde)
    - Görünürlük koşulu
+   - **Figma frame referansı** (zorunlu): Frame adı + node-id veya `[GÖRSEL: {frame adı} — Figma'dan eklenecek]` notu.
 3. **Yeni davranışlar (bullet liste, her bullet 1-2 cümle):**
    - Eklenen alanlar / komponentler / aksiyonlar.
    - Her bullet **tek bir yeteneği** anlatır; "tüm özellikleri tek cümlede" anlatmak YASAK.
    - Yeni komponentin (örn. ters çevirme butonu, picker, switch) **konumu, davranışı, tetiklenme koşulu** ayrı belirtilir.
-4. **Durum bazlı kural grupları ([A12.3]+[A13.1]):**
-   - Akış kuralları **sıralı maddeleme değil**, **state/durum bazlı** gruplanır:
+4. **Durum bazlı kural grupları ([A12.3]+[A13.1]+[A13.1.1]):**
+   - Akış kuralları görünürlük/koşul karşılaştırması ise **state/durum bazlı** gruplanır:
      - "Aktif kayıt varsa" → davranışlar
      - "Aktif kayıt yoksa" → davranışlar
      - "Silme sonrası tüm kayıtlar yok" → davranışlar
+   - Tetik aksiyonu zinciri ise **sıralı maddeleme** kullanılır (örn. popup buton akışı).
    - Her grupta else-case (karşı durum) açıkça yazılır.
-5. **Gösterilen metinler ve gösterim tipi ([A12.3] + [A12.4]):**
+5. **Form validasyonu — varsa ([A16]):**
+   - Form / input alanı varsa [A16.1] Form Validasyon Tablosu doldurulur (alan / zorunluluk / format / aralık / iş kuralı / hata metni / hata gösterim tipi).
+   - Çapraz alan validasyonları ([A16.3]) ayrıca listelenir.
+   - Form yoksa: "Bu işlevde alan-bazlı validasyon bulunmamaktadır."
+6. **Gösterilen metinler ve gösterim tipi ([A12.3] + [A12.4]):**
    - Müşteriye gösterilen **her metin tam Türkçesiyle** (resource key DEĞİL) bu bölümde yazılır.
    - Yanına: gösterim tipi (popup/toast/banner/inline), tetiklenme koşulu, butonlar (varsa).
    - Aynı metnin **resource key'i 3.4.5 CMS tablosuna** ayrıca yazılır. **Resource key 4.1.X içinde geçmez.**
-6. **Hata, sınır ve eski client davranışı ([A13.2] + [A13.3] + [A13.4]):**
+7. **Hata, sınır, eski client + servis sözleşmesi ([A13.2] + [A13.3] + [A13.4] + [A17]):**
    - Servis hatası / boş yanıt / timeout senaryoları.
    - Maks sınır (varsa) ve aşıldığında davranış.
    - Eski client davranışı: "Eski client'larda yeni <X> gösterilmez; mevcut akış değişmeden devam eder."
+   - **Yeni servis = Evet ise:** [A17.1] Servis Sözleşmesi Bloğu (TransactionName / Request / Response / HPC / handler / mevcut servis aramaları).
+   - **Mevcut servis genişletiliyorsa:** [A17.2] Reuse Bloğu.
+8. **Sonraki adım ve ilişkili işlevler ([A15.2] + [A15.3] + [A15.4]):**
+   - Başarılı tamamlamada hangi 4.1.X'e yönlendirilir.
+   - Hata yolunda hangi ekrana / aynı ekranda kalma.
+   - Detay/listeleme/güncelle ekranlarının **kesin 4.1.X referansı**.
+   - Hedef ekran yeni mi, mevcut mu — [A15.3] açıkça yazılır.
 
 > **Yanlış (analistin eleştirdiği biçim):** "Kullanıcı alınacak ve satılacak döviz cinslerini picker ile seçer, ters çevirme butonu ile seçimleri yer değiştirir, hedef kur alanını +/- adımlarıyla günceller ve alarm bitiş tarihini seçer." — Tek cümleye sıkıştırılmış; ters çevirme butonu nerede, nasıl tetiklenir belirsiz; else case yok.
 >
