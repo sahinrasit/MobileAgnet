@@ -215,12 +215,20 @@ Bu agent çok sayıda harici kaynak (Confluence, kapsam dökümanı, Figma, code
 | # | Kontrol | Kural |
 |---|---------|-------|
 | 1 | MG ↔ 4.1.x | 3.1'deki her Müşteri Gereksinimi mevcut bir 4.1.x işlevine eşlenmeli; her 4.1.x işlevinin en az bir MG'si olmalı |
-| 2 | Karar matrisi ↔ detay | Her "Evet" satırının altında detay alt başlığı olmalı; her "Hayır" satırı standart cümleyle geçilmeli (başlık silinmez) |
-| 3 | 3.4.5 CMS key ↔ ekran | 4.1 ekran açıklamalarında geçen metinler 3.4.5 CMS tablosunda key olarak bulunmalı; eksik key işaretlenir |
+| 2 | Karar matrisi ↔ detay | Her "Evet" satırının altında detay alt başlığı olmalı; "Hayır" satırlar **özet karar matrisinde** standart cümleyle geçilmeli (başlık silinmez) |
+| 3 | 3.4.5 CMS key ↔ ekran | 4.1 ekran açıklamalarında geçen **gösterilen metinler** 3.4.5 CMS tablosunda key olarak bulunmalı; eksik key işaretlenir |
 | 4 | Index kodu tutarlılığı | Karar matrisindeki index kodları (4.1.X) gerçek işlev numarasıyla eşleşmeli |
 | 5 | Geliştirme tipi ↔ 3.2 | "mevcut ek iş" ise 3.2'de AS-IS + TO-BE; "bağımsız yeni" ise yalnızca yeni akış |
-| 6 | MCS (C17) ↔ servis matrisi | 4.1 "Servis = Evet" ise 4.1.X.10 / ilgili bölümde C17 tabloları (A/B/C) dolu olmalı |
+| 6 | MCS (C17) ↔ servis matrisi | 4.1 "Servis = Evet" ise 4.1.X.10 / ilgili bölümde C17 tabloları (A/B/C) dolu olmalı; ayrıca [A9.3] gereği "Yeni servis = Evet" yazılmadan önce mevcut MCS incelemesi yapılmış olmalı |
 | 7 | Dil tutarlılığı | 3.4.5 CMS ve dil-etkili bölümlerde tr/en/ar üçü de ele alınmalı (eksikse [ÇEVİRİ GEREKLİ]) |
+| 8 | **Resource key 4.1.x içinde yok** ([A12.3]+[A14]) | 4.1.X içinde `Resource`, `ResourceKey`, `*Key`, `*Title`, `*Message` gibi key adı görülürse hatalıdır — yalnızca 3.4.5 CMS tablosunda olmalı; key 4.1.x'ten temizlenir, yerine **gösterilen metin** (Türkçe tam metin) yazılır |
+| 9 | **Yerleşim spesifikliği** ([A12]) | Her yeni UI giriş noktası için konum referansı + görünürlük koşulu + gösterim tipi yazılı; "uygun yere", "uygun metin" ifadeleri YASAK |
+| 10 | **Else case kapsayıcılığı** ([A13.1]) | Her "X varsa Y" cümlesi için "X yoksa Z" karşı durumu yazılı; eksikse [BELIRSIZ — else case netleştirilecek] |
+| 11 | **Hata / sınır senaryoları** ([A13.2]+[A13.3]) | Servis çağıran her 4.1.X için hata, boş yanıt, timeout, maks sınır senaryosu işlenmiş; yoksa [BELIRSIZ] |
+| 12 | **Eski client davranışı** ([A13.4]) | "Eski client etkisi = Evet" ise eski client'taki davranış açık cümleyle yazılmış |
+| 13 | **Muğlak ifade taraması** ([A14.1]) | "uygun metin", "uygun yere", "bu akış gibi", "ihtiyaç olarak işaretlenmiştir", "Confluence kaynağı paylaşılmadığı için..." gibi ifadeler taranıp temizlenir |
+| 14 | **Yazım taraması** ([C1.1]) | "döküman", "tab" (sekme yerine), "pop up" gibi yanlış yazımlar düzeltilir |
+| 15 | **Loglama somutluğu** | 4.3.1 yazıları somut event listesi içeriyor; "ihtiyaç olarak işaretlenmiş" muğlak kapatma yok |
 
 Tutarsızlık bulunursa: ilgili bölüm düzeltilir veya `[ACIK]` olarak işaretlenip kullanıcıya bildirilir.
 
@@ -305,23 +313,45 @@ Figma'dan veri çıkarımı yüzeysel kalmamalı. Node tipine göre ne çıkarı
 
 ### [A9.1] 11 Satır İçin Deterministik Evet/Hayır Kriteri
 
-Her 4.1.X işlevi için karar matrisi satırları aşağıdaki **somut kriterlere** göre işaretlenir (muğlak "varsa" değil):
+Her 4.1.X işlevi için karar matrisi satırları aşağıdaki **somut kriterlere** göre işaretlenir (muğlak "varsa" değil). Soru metinleri mobil bağlama göre uyarlanmıştır — "rapor", "batch" gibi mobil bağlamla ilgisiz başlıklar **default Hayır** + mobil notu ile geçilir.
 
-| # | Satır | "Evet" Kriteri | Kaynak |
-|---|-------|------------------|--------|
-| 1 | Ekran tasarımı / değişiklik | Figma'da yeni/değişen ekran VAR | Figma + kapsam |
-| 2 | Batch | **Mobilde her zaman Hayır** (default) | — |
-| 3 | Çıktı / Rapor | Ekrandan PDF/dekont/rapor indiriliyor | kapsam + semantic-search |
-| 4 | Menü tanımı | MobileMenu'da yeni/değişen kayıt gerekiyor ([DB2]) | mssql + kapsam |
-| 5 | Servis tanımı | Yeni MCS TransactionName gerekiyor ([DB5]/[DB6]); mevcutta yoksa | C17 + mssql |
-| 6 | Erişim noktaları | MobileMenuMapping'e (Pano/NBT/3D Touch/Spotlight) ekleme var ([DB3]) | mssql + kullanıcı |
-| 7 | SMS / PN | Yeni Form Code / NOTIFICATION template gerekiyor | semantic-search + kullanıcı |
-| 8 | E-mail | NOTIFICATION_EMAIL_TEMPLATE gerekiyor | kullanıcı |
-| 9 | Memo / Ekstre | İşlem memo / ekstre mesajı ekleniyor | kapsam + kullanıcı |
-| 10 | Uyarı / Hata | Yeni Validation Rule / ActionType / hata mesajı var ([DB2] Validation JSON) | Figma + semantic-search |
-| 11 | Etki Analizi | 3.4'te bu işlevle ilgili "Evet" işaretli madde var | 3.4 sonucu |
+| # | Satır | "Evet" Kriteri | "Hayır" Yazılışı (Mobil Default) | Kaynak |
+|---|-------|------------------|----------------------------------|--------|
+| 1 | Yeni ekran tasarımı veya mevcut ekranda değişiklik var mı? | Figma'da yeni/değişen ekran VAR; mevcut ekrana yeni component/sekme/bölüm ekleniyor | "Ekran etkisi bulunmamaktadır." | Figma + kapsam |
+| 2 | Yeni batch veya mevcut batchlerde değişiklik var mı? | (Mobilde nadir) — backend batch tetikleyen yeni iş kuralı | "Mobil kapsamda batch tanımı bulunmamaktadır." | — |
+| 3 | Yeni bir çıktı/rapor veya değişiklik var mı? | Ekrandan PDF/dekont indirme, ekstre üretme var | "Mobil kapsamda çıktı/rapor üretimi bulunmamaktadır." | kapsam |
+| 4 | Yeni menü tanımlanacak mı? | MobileMenu'da yeni/değişen kayıt gerekiyor ([DB2]) | "Yeni menü tanımı bulunmamaktadır." | mssql + kapsam |
+| 5 | Yeni bir servis tanımı olacak mı? | **Önce mevcut MCS incelemesi yapıldı** ([C17]); mevcut TransactionName uygun değil; yeni tanım gerekli | "Yeni servis tanımı gerekmemektedir; mevcut servisler kullanılacaktır." | C17 + mssql |
+| 6 | Erişim noktaları analiz edilecek mi? (Pano/NBT/3D Touch/Spotlight/Deep Link) | MobileMenuMapping'e ekleme/değişiklik var ([DB3]) — bu özellikle yeni giriş noktası ekleniyor | "Bu işlevde ek erişim noktası tanımlanmamaktadır." | mssql + kullanıcı |
+| 7 | SMS/PN bilgilendirme tanımı olacak mı? | Yeni Form Code / NOTIFICATION template gerekiyor | "SMS/PN bilgilendirme gereksinimi bulunmamaktadır." | kullanıcı |
+| 8 | E-mail bilgilendirme tanımı olacak mı? | NOTIFICATION_EMAIL_TEMPLATE gerekiyor | "E-Mail bilgilendirme gereksinimi bulunmamaktadır." | kullanıcı |
+| 9 | Memo / Ekstre tanımı olacak mı? | İşlem memo / ekstre mesajı ekleniyor | "Memo / ekstre gereksinimi bulunmamaktadır." | kullanıcı |
+| 10 | Uyarı / Hata mesajı tanımı olacak mı? | Yeni Validation Rule / ActionType / popup / inline hata mesajı eklenecek ([DB2]) | "Bu işlevde uyarı/hata mesajı gereksinimi bulunmamaktadır." | Figma + semantic-search |
+| 11 | **Mevcut hangi ekranlara/servislere etkisi olacak?** | **Bu işlev mevcut bir ekran/akış/servisi modifiye ediyor; mevcut servis sözleşmesinde değişiklik var; mevcut bir use case'in davranışı değişiyor** | "Mevcut ekran/servis sözleşmesi değişmemektedir; yalnızca yeni eklemeler yapılmaktadır." | semantic-search + C17 |
 
-> Kriter belirsizse [A1] gereği kullanıcıya sorulur (4.1 derinleştirme 13 sorusu ile uyumlu). Kriteri sağlanmayan satır **Hayır**'dır; "Hayır" satırlar standart cümleyle geçilir (modül 01 [C15]).
+> **11. satırın mobil odaklı yeniden yazılışı:** "Yapılacak değişikliğin etki analizi var mı?" sorusu mobil bağlamda muğlak kalıyordu. Artık doğrudan **"hangi mevcut ekranlara dokunulacak / mevcut endpoint sözleşmeleri değişecek mi?"** sorusuna dönüşür. Cevap "Evet" ise hangi 4.1.x ekranı / hangi mevcut servis (TransactionName) etkilendiği listelenir. Bu satır **3.4 etki bölümünden kopya değildir** — fonksiyon-içi mevcut bileşene dokunma analizidir.
+
+### [A9.1.1] Karar Matrisi Yoğunluğu — Tek Özet Matris (Önerilen)
+
+Doküman içinde **karar matrisi tekrarı analist tarafından eleştirildi** ("her işlevin matrisi disconnected ve fazla geldi"). Yeni yaklaşım:
+
+1. **Default akış:** Her 4.1.X altında **tam 11 satırlı matris yazılmaz.** Yalnızca **"Evet" işaretlenen satırlar** kısa bir tablo ile (3 sütun: Başlık / Durum / Not) yazılır. "Hayır" satırlar yazılmaz, başlık silinmez kuralı altına alınmaz (özet matriste topluca yansır).
+2. **Zorunlu:** Bölüm 4.1'in **sonunda** tek bir **"4.1 Özet Karar Matrisi"** doldurulur (kapsam genelinde; 11 satır + işlev kırılımı). Yoğunluk analizi (Evet/Hayır sayıları, başlık bazlı dağılım) yalnızca bu özet matriste yer alır.
+3. **İstisna:** Kullanıcı açıkça "her işlevin altında tam matris istiyorum" derse default davranış değişir; aksi halde özet-merkezli akış uygulanır.
+
+```
+AskUserQuestion(
+  questions: [{
+    question: "Karar matrisi nasıl gösterilsin?",
+    header: "Matris Stratejisi",
+    multiSelect: false,
+    options: [
+      { label: "Özet matris + işlev altı kısa Evet listesi (Önerilen)", description: "Her 4.1.X'te yalnızca Evet satırları, doküman sonunda tek özet matris" },
+      { label: "Her işlev altında tam 11 satır + özet", description: "Daha hacimli, eski format" }
+    ]
+  }]
+)
+```
 
 ### [A9.2] Index Numaralama Kuralı
 
@@ -329,6 +359,13 @@ Her 4.1.X işlevi için karar matrisi satırları aşağıdaki **somut kriterler
 - Örnek: bir işlevde Ekran=Evet, Uyarı/Hata=Evet, Etki=Evet ise → 4.1.1.1 (Ekran), 4.1.1.2 (Uyarı/Hata), 4.1.1.3 (Etki). Aradaki "Hayır"lar atlanır.
 - Index formatı **tutarlı**: `4.1.{işlev}.{sıra}` (örnekteki "4.11" gibi hatalı kısaltma YASAK).
 - Karar matrisi tablosundaki "Index" kolonu bu numarayı, "Başlık adı" kolonu işlev adını gösterir.
+
+### [A9.3] "Yeni Servis" Kararından Önce ZORUNLU İnceleme
+
+Karar matrisinin 5. satırı (Yeni servis tanımı) "Evet" yazılabilmesi için **mevcut MCS servislerinin incelenmiş olması zorunludur** (modül 10 [C17]). İnceleme yapılmadan "Evet" yazılırsa cross-reference kontrolü ([A6.2]) fail eder. İnceleme tamamlanmadıysa:
+
+- Satır: "[BELIRSIZ — mevcut MCS incelemesi sonrası netleştirilecek]"
+- Not: "İlgili işleve aday mevcut servisler {{liste}} olarak tespit edildi; yeniden kullanım uygunluğu teknik tasarım aşamasında doğrulanacaktır."
 
 ---
 
@@ -389,6 +426,166 @@ AskUserQuestion(
 
 ---
 
+## [A12] UI YERLEŞİM VE GÖSTERİM DİSİPLİNİ (Her Özellik İçin Geçerli)
+
+> Bu kurallar **her feature analizinde** uygulanır (kredi kartı, kredi, döviz, yatırım, ödemeler vb. tüm projeler dahil). Amaç: "eklenir / gösterilir" gibi muğlak ifadeleri **kesin yerleşim + gösterim tipi** bilgisine dönüştürmek.
+
+### [A12.1] Yeni Sekme mi Mevcut Sekmeye Gömme mi? — ZORUNLU SORU
+
+Her **yeni UI giriş noktası (CTA / buton / sekme / bölüm)** için ekrana yerleşim adımında şunu netleştir:
+
+```
+AskUserQuestion(
+  questions: [{
+    question: "Bu giriş noktası nereye eklenecek?",
+    header: "Yerleşim",
+    multiSelect: false,
+    options: [
+      { label: "Yeni bir sekme/ekran olarak", description: "Mevcut tab bar'a YENİ sekme eklenir; mevcut sekmeler değişmez" },
+      { label: "Mevcut sekmenin içine bölüm/buton olarak", description: "Mevcut sekmenin içeriğine yerleşir; hangi mevcut sekme(ler) etkilenir ayrıca belirtilir" },
+      { label: "Hem yeni sekme hem mevcut ekrana entry", description: "Yeni sekme + mevcut ekranlarda CTA — her ikisi ayrı detaylanır" }
+    ]
+  }]
+)
+```
+
+- Cevap alınmadan "X butonu eklenir" yazılmaz.
+- "Mevcut sekmenin içine" cevabı verilirse: **hangi sekmenin / ekranın / bölümün içine, hangi mevcut bileşenin altına/üstüne** ayrıca yazılır.
+
+### [A12.2] Yerleşim Bilgisi Zorunlu Formatı
+
+Her yeni UI bileşeninin yerleşimi şu üç bilgi ile yazılır:
+
+| Bilgi | Örnek |
+|-------|-------|
+| **Konum referansı** (hangi mevcut elemanın altında/üstünde/yanında) | "'Son güncelleme saati' satırının altında, ilk liste kartının üstünde" |
+| **Görünürlük koşulu** (her zaman / koşullu) | "Kullanıcının aktif kaydı varsa görünür; yoksa gizlenir" |
+| **Tekrar / sıklık** | "Sekmeye her girişte yeniden değerlendirilir" |
+
+> "Ekranın uygun bir yerine eklenir", "şu metnin altına eklenir" gibi muğlak ifadeler **YASAK**.
+
+### [A12.3] Gösterim Tipi (Display Type) — ZORUNLU SEÇİM
+
+Müşteriye gösterilecek **her bilgilendirme / uyarı / başarı / hata mesajı** için gösterim tipi açıkça belirtilir:
+
+| Tip | Kullanım | Örnek |
+|-----|----------|-------|
+| **Popup (alert/dialog)** | Onay/karar gerektiren, akışı kesen | Silme onayı, kur uyarısı |
+| **Toast** | Kısa süreli, aksiyon istemeyen başarı/durum mesajı (ekranın altında 2-3 sn) | "Alarmınızı kurduk." |
+| **Banner / Bilgi kartı** | Ekran içinde sürekli görünen bilgilendirme | "Alarmlarınız gerçekleştiğinde otomatik silinir." |
+| **Fullscreen / Success page** | İşlem sonrası dedike ekran | Para transferi başarı ekranı |
+| **Inline (alan altı)** | Form alanı altında validasyon mesajı | "Lütfen geçerli bir tutar girin." |
+| **Bottom sheet / Action sheet** | Aşağıdan açılan picker/seçim | Döviz cinsi seçimi |
+| **OS Native popup** | İşletim sistemi izin popup'ı | Bildirim/Kamera izni |
+
+- "Kullanıcıya bilgilendirme yapılır" / "uygun metinle bilgilendirilir" **YASAK** — gösterim tipi + ekran + tetiklenme koşulu birlikte yazılır.
+- Format şablonu: **"<X metni>, <Y gösterim tipi> ile <Z ekranında> <W koşulunda> gösterilir."**
+- Örnek (kabul edilebilir): "'Alarmınızı kurduk.' metni, ekranın alt kısmında 2 sn süreli **toast** olarak, Alarm Kur işlemi başarılı döndükten sonra Alarmlarım sekmesine yönlendirmeden hemen önce gösterilir."
+
+### [A12.4] Popup İçerik Şablonu
+
+Her popup için aşağıdaki 5 alan eksiksiz yazılır:
+
+| Alan | Örnek |
+|------|-------|
+| **Tetiklenme koşulu** | "Cihaz bildirim izni kapalı olduğunda Döviz Alarmı Kur butonuna basıldığında" |
+| **Başlık (varsa)** | "Bildirim İzni Gerekli" |
+| **Gövde metni (tam metin, Türkçe)** | "Bildirim izniniz bulunmuyor. Dilerseniz bildirim izni verdikten sonra alarm kurabilirsiniz." |
+| **Butonlar (etiket + aksiyon)** | "Vazgeç" → popup kapanır, akış mevcut ekranda kalır. "Bildirim Ayarları" → işletim sistemi bildirim ayarlarına yönlendirilir. |
+| **Geri tuşu / dışarıya tıklama** | "Geri tuşu = Vazgeç davranışı" |
+
+- "Vazgeç butonu" gibi etiketler her zaman gerçek metin olarak (Türkçe) verilir; "Cancel / Settings" gibi İngilizce etiket **YASAK** (çeviri 3.4.5'te yönetilir).
+
+---
+
+## [A13] ELSE-CASE, HATA SENARYOSU VE ESKİ CLIENT DİSİPLİNİ
+
+> Her özellik analizinde **happy path tek başına yetersizdir**. Her kural için karşı durum (else), hata senaryosu ve eski sürüm davranışı birlikte yazılır.
+
+### [A13.1] Else-Case Zorunluluğu
+
+- "X varsa Y" yazıldığı her yerde **"X yoksa Z"** karşı durumu da yazılır. Eksikse [BELIRSIZ — else case netleştirilecek] etiketi düşülür ve kullanıcıya sorulur.
+- Örnek (eksik): "Bildirim izni yoksa popup açılır." → Yetersiz.
+- Örnek (yeterli): "Bildirim izni yoksa popup açılır; bildirim izni varsa popup gösterilmez, kullanıcı doğrudan Yeni Alarm Kur ekranına yönlendirilir."
+
+### [A13.2] Servis Hatası ve Boş Yanıt Senaryoları
+
+Yeni veya değişen her servis için aşağıdaki senaryolar mutlaka ele alınır:
+
+| Senaryo | Doldurulacak |
+|---------|-------------|
+| Başarılı dönüş | Hangi ekran/aksiyon tetiklenir |
+| Servis hatası (HTTP 4xx/5xx / business error) | Hangi hata ekranı/popup'ı, hangi metin, geri tuşu davranışı |
+| Boş yanıt | Boş durum metni + alternatif CTA |
+| Timeout / ağ kesintisi | Tekrar dene davranışı, yönlendirme |
+
+> "Hata olursa generic hata gösterilir" **YASAK** — generic ekran kullanılıyorsa hangisi (hangi ekran key'i / komponent), ne yazısı gösterilir açıkça yazılır.
+
+### [A13.3] Maksimum Sınır / İş Kuralı Limitleri
+
+- Liste, sayı, tutar, sayaç içeren her özellikte **üst sınır** (maks alarm sayısı, maks kart sayısı, vade aralığı vb.) sorulur ve yazılır.
+- Sınır aşılırsa: hangi metin, hangi gösterim tipi (popup/toast/inline), hangi aksiyon (engelle / uyar / fallback) — açıkça belirtilir.
+- Kullanıcıdan / kapsamdan bilgi yoksa: `[BELIRSIZ — maks sınır netleştirilecek]` + soru.
+
+### [A13.4] Eski Client (Older Build) Davranışı — ZORUNLU SATIR
+
+Karar matrisinde "Eski client etkisi" Evet ise **iki şeyi birden yaz:**
+
+1. **Hangi yapısal etki var:** Pilot kontrolü, MinBuildNumber, menü görünürlüğü gibi.
+2. **Eski client deneyimi:** "Mevcut akış değişmeden devam eder; yeni eklenen <giriş noktası / sekme / buton> eski client'larda gösterilmez." biçiminde **açık cümle.**
+
+> "Eski client etkisi vardır" tek başına yetersizdir; kullanıcı eski sürümde uygulamanın nasıl davranacağını bilmek ister.
+
+### [A13.5] Geri / Çıkış / İptal Davranışları
+
+- Her popup ve formda: geri tuşu, dışa tıklama, "Vazgeç" / "İptal" butonlarının davranışı ayrı yazılır.
+- Çıkış akış kaybına yol açıyorsa (form doldurulmuş, alarm yarıda kalmış vb.): kullanıcıya çıkış onayı gerekip gerekmediği belirtilir.
+
+---
+
+## [A14] SPESİFİKLİK, JARGON VE YASAK İFADELER
+
+### [A14.1] Muğlak İfade Kara Listesi (Çıktıda YASAK)
+
+Aşağıdaki kalıplar çıktı dokümanına **yazılmaz**; agent self-review'da bunları tarar ve düzeltir:
+
+| Yasak İfade | Neden | Yerine |
+|-------------|------|--------|
+| "uygun metinle bilgilendirilir" | gösterim tipi/metin/koşul yok | [A12.3] formatı: metin + tip + ekran + koşul |
+| "uygun yere eklenir" | konum yok | [A12.2] konum referansı + görünürlük koşulu |
+| "bu akış gibi yapılır" | hangi akış belirsiz | İlgili 4.1.x maddesine referans + farklılık varsa açık yaz |
+| "ihtiyaç olarak işaretlenmiştir" | ihtiyaç ham haldedir, çıkmamış | Loglama: somut event listesi VEYA "Loglama detayı teknik tasarım aşamasında netleştirilecektir." |
+| "gerekli durumlarda" | hangi durum belirsiz | Koşulu açıkça yaz |
+| "vb. / vs. / ..." | eksik enumerasyon | Tam listele veya "şu üç durumla sınırlıdır:" |
+| "bu doküman kapsamında değildir" (gerekçesiz) | gerekçe yok | 3.3'e gerekçeyle taşı |
+| "Confluence kaynağı paylaşılmadığı için..." | doküman içi süreç açıklaması | **Doküman içinde YASAK.** Eksik kaynakları doküman dışı not olarak ilet. |
+
+### [A14.2] Jargon ve Teknik Terim İlk Kullanım Tanımı
+
+- Doküman içinde ilk kullanımında **kısa tanım** verilen terimler: toast, popup, banner, picker, bottom sheet, action sheet, swipe, deep link, badge, skeleton.
+- Tanım Bölüm 2'ye eklenir; ayrıca ilgili 4.1.x'te ilk geçtiği yerde parantez içinde kısa hatırlatma yapılabilir.
+- Banka dahili kısaltmalar (HPC, MCS, MCS-VeriBranchBI, EDW, SAS, Dataroid, Adjust, ÜGS, ADK, NBT, MDYS, OSDEM-SDY, FOMER): Bölüm 2'ye zorunlu eklenir.
+
+### [A14.3] Belirsizlik Fallback Cümlesi
+
+Bilgi netleşmemişse uydurmak yerine:
+
+- Genel: "[BELIRSIZ — netleştirilecek]"
+- Loglama özelinde: "**Loglama detayı teknik tasarım aşamasında netleştirilecektir.**" + neden netleşmediği (örn. EDW ekibi onayı bekleniyor).
+- Servis sözleşmesi: "**Servis sözleşmesi mwbackend incelemesi ve teknik tasarım aşamasında netleştirilecektir.**"
+- Sayısal limit: "[BELIRSIZ — maks değer netleştirilecek]" + sorulan kişi/ekip.
+
+### [A14.4] Yazım ve Türkçe Doğruluğu
+
+- **"doküman"** (DOĞRU) — "döküman" (YANLIŞ, çıktı taraması yapılır).
+- **"popup"** (DOĞRU, ödünç terim) — Türkçe yazımda tek kelime, ekler tireli: "popup'ı", "popup'ın".
+- **"toast"** (DOĞRU, ödünç terim) — Bölüm 2'de tanım zorunlu.
+- **"sekme"** (sekme YT: tab) — "tab" yerine her zaman "sekme".
+- **"sayfa" / "ekran"** ayrımı: sayfa = belirli bir route/rota; ekran = bir sayfanın görünür hâli.
+- Self-review (Adım 4) typo taramasında bu liste uygulanır.
+
+---
+
 ## BÖLÜM BAZLI DOLDURMA KURALLARI (Kullanıcı Dikte — Kanonik)
 
 > Bu bölüm, her SDLC maddesinin nasıl doldurulacağına dair kullanıcının dikte ettiği kuralları içerir. Agent her maddeyi doldururken buradaki kuralı uygular. Kural tanımlı değilse [A1] röportaj moduna düşer (kullanıcıya sorar).
@@ -399,6 +596,7 @@ AskUserQuestion(
 - **Kaynak:** Confluence + kapsam dökümanı + Figma (Adım 0.6-0.7'de okunan).
 - **Ne yazılır:** Proje tanımı + amacı + analiz kapsamı (hangi ekran/akış/işlev ele alınıyor, geliştirme tipi mevcut mu yeni mi). Profesyonel analist dili.
 - **Kural:** Kesinlikle dolu; uydurma YASAK; sadece dökümanda okunana dayanır; eksikse `[BELIRSIZ — kaynakta yok]` + kullanıcıya sor.
+- **Doküman içi süreç açıklaması YASAK:** "Confluence kaynağı paylaşılmadığı için Confluence'a bağlı detaylar [BELIRSIZ] olarak işaretlenmiştir." benzeri cümleler **doküman içine yazılmaz** ([A14.1]). Eksik kaynaklar **doküman dışı** olarak kullanıcıya iletilir (handoff özetinde / completeness raporunda). Belirsiz noktalar yine `[BELIRSIZ — kaynakta yok]` etiketiyle ilgili maddenin yanında işaretlenir; ancak "Confluence yok" tarzı meta-açıklama Bölüm 1'in akıcılığını bozar ve dokümanda yer almaz.
 
 ### Bölüm 2 — Terimler ve Kısaltmalar
 
@@ -536,11 +734,56 @@ AskUserQuestion(
   - MCS input/output/çağrı zinciri: modül 10 [C17] (VpTransaction/Config/Attributes + VpVeriBranchHostCallMappingView + VpHostCallMappingDetail + ChannelID fallback)
   - Menü/Resource: `mcp-mssql-db-operations` + `_common-rules/15-db-reference.md` [DB2]/[DB3]/[DB4] (MobileMenu, MobileMenuMapping, VpStringResource)
 
-#### 4.1.X Karar Matrisi (her işlev için)
+#### 4.1.X İşlev Yazım Şablonu (ZORUNLU İskelet — Her Özellik İçin)
 
-Her işlevin altında karar matrisi doldurulur (Evet/Hayır + index + başlık adı). Matris sırası: Ekran tasarımı → Batch → Çıktı/Rapor → Menü → Servis → Erişim noktaları → SMS/PN → E-mail → Memo/Ekstre → Uyarı/Hata → Etki Analizi.
+Her 4.1.X işlevi aşağıdaki 6 bölümlü iskeletle yazılır. **Sıra değiştirilemez, atlama yapılamaz.** Bir bölüm boş kalıyorsa standart "etkisiz" cümlesi (modül 01 [C15]) yazılır; başlık silinmez.
 
-> **Evet/Hayır kriterleri ve index numaralama için [A9]'a bak** — her satırın deterministik kriteri vardır; yalnızca "Evet" satırlar `4.1.X.n` biçiminde ardışık numaralanır. "Hayır" olanlar standart cümleyle geçilir (modül 01 [C15]).
+1. **Bağlam paragrafı (1-3 cümle):**
+   - Bu işlev hangi iş ihtiyacını karşılıyor; mevcut akışla nasıl ilişkili; geliştirme tipi (mevcut ek / yeni).
+2. **Ekran konumu ve giriş noktası ([A12.1] + [A12.2]):**
+   - Yeni sekme mi, mevcut sekme içine mi? (cevap netleştirilmiş haliyle)
+   - Konum referansı (hangi mevcut elemanın altında/üstünde)
+   - Görünürlük koşulu
+3. **Yeni davranışlar (bullet liste, her bullet 1-2 cümle):**
+   - Eklenen alanlar / komponentler / aksiyonlar.
+   - Her bullet **tek bir yeteneği** anlatır; "tüm özellikleri tek cümlede" anlatmak YASAK.
+   - Yeni komponentin (örn. ters çevirme butonu, picker, switch) **konumu, davranışı, tetiklenme koşulu** ayrı belirtilir.
+4. **Durum bazlı kural grupları ([A12.3]+[A13.1]):**
+   - Akış kuralları **sıralı maddeleme değil**, **state/durum bazlı** gruplanır:
+     - "Aktif kayıt varsa" → davranışlar
+     - "Aktif kayıt yoksa" → davranışlar
+     - "Silme sonrası tüm kayıtlar yok" → davranışlar
+   - Her grupta else-case (karşı durum) açıkça yazılır.
+5. **Gösterilen metinler ve gösterim tipi ([A12.3] + [A12.4]):**
+   - Müşteriye gösterilen **her metin tam Türkçesiyle** (resource key DEĞİL) bu bölümde yazılır.
+   - Yanına: gösterim tipi (popup/toast/banner/inline), tetiklenme koşulu, butonlar (varsa).
+   - Aynı metnin **resource key'i 3.4.5 CMS tablosuna** ayrıca yazılır. **Resource key 4.1.X içinde geçmez.**
+6. **Hata, sınır ve eski client davranışı ([A13.2] + [A13.3] + [A13.4]):**
+   - Servis hatası / boş yanıt / timeout senaryoları.
+   - Maks sınır (varsa) ve aşıldığında davranış.
+   - Eski client davranışı: "Eski client'larda yeni <X> gösterilmez; mevcut akış değişmeden devam eder."
+
+> **Yanlış (analistin eleştirdiği biçim):** "Kullanıcı alınacak ve satılacak döviz cinslerini picker ile seçer, ters çevirme butonu ile seçimleri yer değiştirir, hedef kur alanını +/- adımlarıyla günceller ve alarm bitiş tarihini seçer." — Tek cümleye sıkıştırılmış; ters çevirme butonu nerede, nasıl tetiklenir belirsiz; else case yok.
+>
+> **Doğru:** Her yeni komponent ayrı bullet'ta; konumu, tetiklenme koşulu ve sonucu ayrı yazılır. Örnek:
+> - **Alış/Satış picker'ı:** Ekranın üst kısmında iki seçim alanı olarak yer alır; her birine tıklandığında bottom sheet ile döviz listesi açılır; seçim sonrası alan güncellenir.
+> - **Ters çevirme butonu:** Picker'ların arasında, ortada konumlanır. Tıklanınca alınacak ve satılacak döviz seçimleri yer değiştirir; başka bir aksiyon tetiklemez. Yalnızca her iki picker da doluyken aktif olur, aksi halde pasif gösterilir.
+
+#### 4.1.X Karar Matrisi (Özet-Merkezli Yaklaşım — [A9.1.1])
+
+- **Default:** Her işlevin altında **tam 11 satırlı matris yazılmaz**; yalnızca o işlevde "Evet" işaretlenen satırlar 3 sütunlu kısa tablo ile (Başlık / Durum / Not) yazılır.
+- **Zorunlu:** Bölüm 4.1'in sonunda tek bir **"4.1 Özet Karar Matrisi"** (tam 11 satır, kapsam genelinde) ve istenirse yoğunluk analizi (işlev x karar satırı görünümü) yer alır.
+- **Index numaralama:** [A9.2] kurallarına göre yalnızca "Evet" satırlar `4.1.X.n` biçiminde numaralanır.
+
+#### 4.1.X CMS ↔ Yazılım Gereksinimi Eşleme Disiplini
+
+| Yer | Ne yazılır | Ne YAZILMAZ |
+|-----|-----------|-------------|
+| 4.1.X içindeki yazılım gereksinimi | Müşteriye gösterilen metnin **tam Türkçe karşılığı** | Resource key (örn. `CurrencyAlarmCreatedToast`) |
+| 3.4.5 CMS tablosu | Resource key + tr-TR/en-US/ar-SA değerleri | — |
+| 4.1.X'in sonunda kısa "Kullanılan CMS Key'leri" referansı (isteğe bağlı) | Bu işlevde kullanılan key'lerin **listesi** (değer yok) | Değer/metin |
+
+> Cross-reference kontrolü ([A6.2]) bu eşlemeyi doğrular: 4.1.X'te geçen her gösterilen metin 3.4.5 CMS tablosunda bir key olarak bulunmalıdır; eksik key işaretlenir.
 
 #### 4.1 Derinleştirme Soruları (Kullanıcıya Sorulacak — ZORUNLU)
 
@@ -578,7 +821,28 @@ Template'te bir madde "default" işaretliyse veya standart bir "etkisi yoktur / 
 
 ### Bölüm 4.3 — Log ve EDW Rapor Gereksinimleri
 
-- **Yöntem:** Kullanıcıya sor, cevaba göre doldur.
+- **Yöntem:** Kullanıcıya sor, cevaba göre doldur. **Loglama metni mutlaka somut event listesine bağlanır** — "ihtiyaç olarak işaretlenmiştir" tarzı yarım cümleler [A14.1] gereği YASAK.
+
+#### Somut Loglama Event Listesi (her özelliğin temel taslağı)
+
+Loglama "Evet" çıkıyorsa aşağıdaki event sınıflarından **bu özelliğe uygulanabilenler** listelenir; uygulanamayanlar yazılmaz. "Loglama var" değil, "şu event'ler için şu alanlar loglanacak" yazılır.
+
+| Event Sınıfı | Tipik Örnek (özelliğe uyarla) |
+|--------------|--------------------------------|
+| Giriş noktası açılış | Sekme/sayfa ilk açıldığında (kaynak: liste/giriş CTA) |
+| Yeni kayıt oluşturma | Aksiyon başarılı + hata; payload özet alanlar |
+| Kayıt güncelleme | Eski/yeni değer farkı, hangi alanlar değişti |
+| Kayıt silme | Silme onayı + sonucu |
+| Filtre / arama değişikliği | Hangi filtre, hangi değer |
+| Popup aksiyonu | Hangi popup, hangi buton (Vazgeç/Onay) |
+| Push notification gönderim | PN form code + alıcı + tetik |
+| Push notification açılış | PN tıklama, derin link rotası |
+| Hata yakalama | Servis hatası + ekran context'i |
+
+#### Belirsizlik Fallback (Loglama)
+
+Loglama detayı net değilse [A14.3]: **"Loglama detayı teknik tasarım aşamasında netleştirilecektir."** Yanına gerekçe (örn. "EDW ekibi alan listesini ileteck"). Asla "ihtiyaç olarak işaretlenmiştir" cümlesiyle kapatılmaz.
+
 - **4.3.1 Ürün İşlem log / Müşteri log / ADK log / Kullanıcı log / Arcsight / Teftiş log + EDW Extra Field + Contact History:**
 
 ```

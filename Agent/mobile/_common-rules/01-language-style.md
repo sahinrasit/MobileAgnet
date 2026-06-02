@@ -11,6 +11,22 @@
 - Emoji **YASAK**.
 - Belirsizlik etiketleri: `[DOGRULANDI]`, `[KISMI]`, `[BELIRSIZ]`, `[ARASTIRILACAK]`, `[ACIK]`, `[COZULDU]`.
 
+### [C1.1] Yazım ve Türkçe Doğruluğu (Self-Review Taraması)
+
+Aşağıdaki kelimeler self-review aşamasında taranır ve düzeltilir. Çıktıya yanlış yazılmış hâli geçirilmez:
+
+| Doğru | Yanlış |
+|-------|--------|
+| doküman | döküman |
+| popup | popUp / pop-up / pop up (tek kelime kullanılır; ekler tireli: "popup'ı") |
+| toast | toast mesajı (terim olarak tanımlanmalı; Bölüm 2'de açıklanmalı) |
+| sekme | tab |
+| ekran | screen (Türkçe metinlerde İngilizce karşılık kullanılmaz) |
+| Çapraz Döviz | Çapraz döviz / çapraz Döviz (özel ad gibi tek tip yazım) |
+| analist | analyst |
+
+> Bu tarama agentın self-review (Adım 4) ve quality-gate (modül 14) aşamasında zorunludur.
+
 ## [C13] Genel Yasaklar
 
 - **Terminal/shell komutu** (run_in_terminal, subprocess, exec): YASAK. MCP sonuçları büyük olsa bile yalnızca MCP ve dosya okuma/yazma kullanılır.
