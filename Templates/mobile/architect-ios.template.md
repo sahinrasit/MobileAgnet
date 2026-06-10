@@ -48,12 +48,21 @@
 ## 3. Yapılacak İşler — İşlev Bazında
 
 > Her 4.1.X işlevi için 11 alt başlık (3.1.0 – 3.1.10). SDLC dokümanındaki 4.1.X iskeleti (8 bölüm) bu teknik bölüme dönüştürülmüştür.
+> **[B18] ZORUNLU:** Her alt başlık tablodan/koddan önce 2-5 cümlelik açıklayıcı paragrafla başlar. UI bölümleri ekran davranışını kullanıcı gözünden akış sırasıyla anlatır (açılışta ne olur → kullanıcı ne görür → etkileşimde ne tetiklenir → başarı/hata/boş durumda ne gösterilir). Doğrudan tabloyla başlayan bölüm sığ kabul edilir.
+> **[B19] ZORUNLU:** Tablolardaki her metot, property, outlet ve alan için "ne iş yapar" açıklaması en az 1-2 tam cümledir; mevcut öğelerin yanına **(MEVCUT)** + konumu yazılır. Doküman tek başına bir developer'ın veya AI agent'ın soru sormadan kodlamasına yetecek kadar eksiksiz olmalıdır.
 
 ### 3.1 — 4.1.{{N}} {{İşlev Adı}}
 
 #### 3.1.0 Bağlam
 
 > 1-2 paragraf — SDLC 4.1.{{N}} girişinden: bu işlev kullanıcıya ne sağlar, mevcut akışa nasıl eklenir, iOS tarafında hangi ekran/komponentler yapılır ve hangi backend endpoint'i kullanılır.
+
+**Ekran Tasarımları (Figma):**
+
+| Ekran | Figma Linki |
+|-------|--------------|
+| {{Ekran adı}} | [{{Ekran adı}}](https://figma.com/...?node-id={{...}}) veya `[BELIRSIZ — Figma linki eklenecek]` |
+| {{Popup / bottom sheet}} | {{link}} |
 
 #### 3.1.1 Mevcut Durum (Semantic-Search Bulgusu)
 
@@ -66,6 +75,8 @@
 > semantic-search ile bulunmayan referanslar için `[BELIRSIZ — codebase'de doğrulanamadı]`.
 
 #### 3.1.2 Eklenecek / Değişecek Dosyalar
+
+> Statü üç değerli ([B17.1]): **YENİ** / **MEVCUT — genişletiliyor** (delta yazılır) / **MEVCUT — değişmiyor** (kullanılır). Mevcut ekrana komponent ekleniyorsa VC/Storyboard "MEVCUT — genişletiliyor" olur, yeni ekran açılmaz.
 
 | Dosya | Tür | Değişiklik | Detay |
 |-------|------|------------|-------|
@@ -97,12 +108,15 @@ final class CurrencyAlarmCreateViewController: UIViewController {
 }
 ```
 
-| Sınıf | Metod / Outlet / Action | İmza | Sorumluluk |
-|-------|-------------------------|------|------------|
-| {{VC}} | `viewDidLoad()` | — | İlk yükleme + servis çağrısı |
-| {{VC}} | `{{action1}}(_:)` | `IBAction` | Buton tıklama → akış başlat |
-| {{VC}} | `{{outlet1}}` | `UILabel` | {{Hangi metin gösteriliyor}} |
-| {{ViewModel}} | `load{{Data}}()` | `async throws` | mwbackend servisini çağırır |
+> **[B19] ZORUNLU:** Her satırın "Ne İş Yapar" hücresi en az 1-2 tam cümle: öğe ne zaman çağrılır/set edilir, hangi akışın parçasıdır, hangi öğelerle ilişkilidir. Tek kelimelik açıklama yetersizdir. Mevcut öğelerin yanına **(MEVCUT)** + tanımlı olduğu yer yazılır.
+
+| Sınıf | Metod / Outlet / Property | Statü | İmza | Ne İş Yapar (detaylı) |
+|-------|----------------------------|-------|------|------------------------|
+| {{VC}} | `viewDidLoad()` | {{YENİ/MEVCUT}} | — | {{Örn: "Ekran ilk yüklendiğinde çalışır; başlık ve buton metinlerini 3.1.4'teki key'lerden set eder, ardından `viewModel.load{{Data}}()` çağırarak listeyi çeker."}} |
+| {{VC}} | `{{action1}}(_:)` | {{...}} | `IBAction` | {{Örn: "Kullanıcı {{buton}}'a bastığında tetiklenir; önce `{{Validator}}.validate` çalıştırır, geçerse `{{Service}}.create` çağırır, dönen `resultMessageKey` ile toast gösterir."}} |
+| {{VC}} | `{{outlet1}}` | {{...}} | `UILabel` | {{Örn: "{{Ekran}} başlığını gösterir; metni `{{KEY_1}}` key'inin response değerinden gelir."}} |
+| {{ViewModel}} | `alarms` | {{...}} | `[{{Item}}]` | {{Örn: "list() yanıtındaki alarm listesini tutar; tableView datasource buradan beslenir, silme sonrası güncellenir."}} |
+| {{ViewModel}} | `load{{Data}}()` | {{...}} | `async throws` | {{Örn: "Ekran açılışında ve pull-to-refresh'te çağrılır; `GET {{endpoint}}`'i çağırıp sonucu `alarms`'a yazar, hata durumunda `errorState`'i set eder."}} |
 
 #### 3.1.4 Resource Key Kullanımı ([B8] Envanteri — Bu Ekranın TÜM Key'leri)
 
@@ -127,10 +141,12 @@ toastView.show(message: response.resultMessage)   // backend resultMessageKey de
 
 > iOS doğrudan MCS çağırmaz; mwbackend endpoint'ini çağırır. Endpoint sözleşmesi `architect-backend.md` Bölüm 3.x'te tanımlıdır.
 
-| Endpoint (mwbackend) | iOS Service Metodu | Request DTO | Response DTO | Tetiklendiği Yer |
-|----------------------|---------------------|-------------|---------------|-------------------|
-| `POST /api/{{kebab-konu}}` | `{{Service}}.create(req:)` | `{{Konu}}CreateRequest` | `{{Konu}}CreateResponse` | {{Buton / lifecycle}} |
-| `GET /api/{{kebab-konu}}` | `{{Service}}.list()` | — | `{{Konu}}ListResponse` | `viewWillAppear` |
+> **[B17.1]:** Endpoint statüsü (YENİ / MEVCUT — genişletiliyor / MEVCUT) backend dokümanıyla birebir aynı yazılır. Mevcut endpoint genişletiliyorsa iOS tarafında yalnızca **eklenen alanların** kullanımı yazılır (örn. "mevcut `GetX` response'una eklenen `buttonNameKey` → yeni butonun title'ı").
+
+| Endpoint (mwbackend) | Statü | iOS Service Metodu | Request DTO | Response DTO | Tetiklendiği Yer |
+|----------------------|-------|---------------------|-------------|---------------|-------------------|
+| `POST /api/{{kebab-konu}}` | {{YENİ / MEVCUT...}} | `{{Service}}.create(req:)` | `{{Konu}}CreateRequest` | `{{Konu}}CreateResponse` | {{Buton / lifecycle}} |
+| `GET /api/{{kebab-konu}}` | {{...}} | `{{Service}}.list()` | — | `{{Konu}}ListResponse` | `viewWillAppear` |
 | `PUT /api/{{kebab-konu}}/{id}` | `{{Service}}.update(id:req:)` | `{{Konu}}UpdateRequest` | `{{Konu}}UpdateResponse` | {{...}} |
 | `DELETE /api/{{kebab-konu}}/{id}` | `{{Service}}.delete(id:)` | — | `{{Konu}}DeleteResponse` | {{...}} |
 
@@ -164,6 +180,10 @@ final class CurrencyAlarmService: CurrencyAlarmServicing {
 ```
 
 #### 3.1.6 UI Komponent Yerleşimi (SDLC 4.1.X step 2 + 3'ten)
+
+**Ekran davranışı ([B18.2]):**
+
+> {{Akış sırasıyla anlatım — örnek: "Kullanıcı {{giriş noktası}}'ndan ekrana geldiğinde açılışta `{{endpoint}}` çağrılır ve {{ne gösterilir}}. {{Alan}}'a dokunduğunda {{picker/sheet}} açılır; seçim sonrası {{ne olur}}. {{Buton}}'a basıldığında {{validasyon → servis → başarı/hata akışı}}. Liste boşsa {{empty state}}, servis hatasında `MessageKey` ile {{popup/inline}} gösterilir."}}
 
 > SDLC dokümanındaki "Ekran konumu ve giriş noktası" ile "Yeni davranışlar" iOS karşılığı:
 
@@ -323,6 +343,7 @@ guard AppInfo.buildNumber >= {{MIN_BUILD_IOS}} else {
 | Kaynak | Yol |
 |--------|-----|
 | SDLC analiz | `docs/mobile-sdlc-analiz.md` |
+| Figma ekran tasarımları | Her işlevin 3.x.0 Bağlam bölümündeki link tabloları |
 | Cross-platform overview | `docs/architect/architect-index.md` |
 | Backend sözleşmesi | `docs/architect/architect-backend.md` |
 | Codebase keşfi cache | `docs/.architect-codebase-cache.json` |

@@ -46,6 +46,9 @@
 
 ## 3. Yapılacak İşler — İşlev Bazında
 
+> **[B18] ZORUNLU:** Her alt başlık tablodan/koddan önce 2-5 cümlelik açıklayıcı paragrafla başlar. Servis bölümlerinde uçtan uca akış cümlesi yazılır: "Kullanıcı {{buton}}'a bastığında client `{{endpoint}}`'i {{alanlar}} ile çağırır; Handler → UseCase → `{{TXN}}` MCS zinciri işler; başarılı yanıtta {{...}}, hatada `MessageKey` ile {{...}} gösterilir." Doğrudan tabloyla başlayan bölüm sığ kabul edilir.
+> **[B19] ZORUNLU:** Tablolardaki her class, method, DTO alanı ve constant için "ne iş yapar" açıklaması en az 1-2 tam cümledir (ne zaman çağrılır, hangi akışın parçası, hangi öğelerle ilişkili); mevcut öğelerin yanına **(MEVCUT)** + konumu yazılır. Doküman tek başına bir developer'ın veya AI agent'ın soru sormadan kodlamasına yetecek kadar eksiksiz olmalıdır.
+
 ### 3.1 — 4.1.{{N}} {{İşlev Adı}}
 
 #### 3.1.0 Bağlam
@@ -63,6 +66,8 @@
 
 #### 3.1.2 DDD Katman Yerleşimi — Yeni / Değişen
 
+> Statü üç değerli ([B17.1]): **YENİ** / **MEVCUT — genişletiliyor** (delta yazılır) / **MEVCUT — değişmiyor** (kullanılır). İhtiyacı mevcut Handler/Service karşılıyorsa yeni class önerilmez.
+
 | Katman | Repo Yolu | Yeni / Değişen | Açıklama |
 |--------|-----------|------------------|----------|
 | Controller | `mwbackend/Application/{{Domain}}/Controller/{{Adi}}Controller.cs` | {{Y/D}} | Endpoint: `POST /api/{{kebab}}` |
@@ -77,13 +82,25 @@
 
 > iOS / Android client'ların çağıracağı endpoint sözleşmesi. `architect-ios.md` ve `architect-android.md` ile **birebir** senkron olmalıdır.
 > **[B16.1] ZORUNLU:** Aşağıdaki üç tablo (Input / Output / Response ResourceKey) **her endpoint için ayrı ayrı** doldurulur; tek satırlık endpoint tanımı YETERSİZDİR.
+> **[B17.1] ZORUNLU:** Her endpoint'in statüsü belirtilir: **YENİ** / **MEVCUT — genişletiliyor** / **MEVCUT — değişmiyor**. İhtiyacı mevcut endpoint karşılıyorsa yeni endpoint yazılmaz; mevcut endpoint "MEVCUT — genişletiliyor" etiketi + aşağıdaki delta tablosuyla gösterilir.
 
-| Endpoint | Method | Handler | Request | Response | Auth |
-|----------|--------|---------|---------|----------|------|
-| `/api/{{kebab-konu}}` | POST | `{{Adi}}Controller.Create` | `{{Adi}}CreateRequest` | `{{Adi}}CreateResponse` | Mobile Auth |
-| `/api/{{kebab-konu}}` | GET | `{{Adi}}Controller.List` | (query params) | `{{Adi}}ListResponse` | Mobile Auth |
-| `/api/{{kebab-konu}}/{id}` | PUT | `{{Adi}}Controller.Update` | `{{Adi}}UpdateRequest` | `{{Adi}}UpdateResponse` | Mobile Auth |
-| `/api/{{kebab-konu}}/{id}` | DELETE | `{{Adi}}Controller.Delete` | — | `{{Adi}}DeleteResponse` | Mobile Auth |
+**MEVCUT — genişletiliyor endpoint için Delta Tablosu (yalnızca eklenen/değişen kısım):**
+
+> Örnek: mevcut ekrana buton ekleniyorsa, ekranı besleyen mevcut endpoint'in output'una alan eklenir — yeni endpoint açılmaz.
+
+| Mevcut Endpoint | Konum (Controller/Handler) | Eklenen Alan | Tip | Yön | Açıklama / Client Kullanımı |
+|------------------|----------------------------|---------------|-----|-----|------------------------------|
+| `GET /api/{{kebab}}` (MEVCUT) | `{{X}}Controller.{{Action}}` (`{{path}}`) | `{{buttonNameKey}}` | string | OUT | Butonun metni (ResourceKey) — {{ekran}} butonunda gösterilir |
+| aynı | aynı | `{{isButtonVisible}}` | bool | OUT | Buton görünürlüğü |
+
+> Mevcut alanlar yeniden listelenmez; sadece eklenenler. Mevcut sözleşme değişiyorsa [B14.2] regresyon tablosu zorunlu.
+
+| Endpoint | Method | Statü ([B17.1]) | Handler | Request | Response | Auth |
+|----------|--------|------------------|---------|---------|----------|------|
+| `/api/{{kebab-konu}}` | POST | {{YENİ / MEVCUT — genişletiliyor / MEVCUT}} | `{{Adi}}Controller.Create` | `{{Adi}}CreateRequest` | `{{Adi}}CreateResponse` | Mobile Auth |
+| `/api/{{kebab-konu}}` | GET | {{...}} | `{{Adi}}Controller.List` | (query params) | `{{Adi}}ListResponse` | Mobile Auth |
+| `/api/{{kebab-konu}}/{id}` | PUT | {{...}} | `{{Adi}}Controller.Update` | `{{Adi}}UpdateRequest` | `{{Adi}}UpdateResponse` | Mobile Auth |
+| `/api/{{kebab-konu}}/{id}` | DELETE | {{...}} | `{{Adi}}Controller.Delete` | — | `{{Adi}}DeleteResponse` | Mobile Auth |
 
 **Endpoint Input — `{{Adi}}CreateRequest` (her endpoint için tekrarla):**
 

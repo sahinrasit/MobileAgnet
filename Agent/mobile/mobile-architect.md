@@ -49,8 +49,9 @@ Sırasıyla `Read`:
 9. `Agent/mobile/_common-rules/12-state-recovery.md` (state + rolling summary)
 10. `Agent/mobile/_common-rules/14-quality-gate.md`
 11. `Agent/mobile/_common-rules/15-db-reference.md` (tablo şemaları)
+12. `Agent/mobile/_common-rules/16-domain-conventions.md` ([C22] — bildirim izni tek ortak noktadan vb. domain kuralları)
 
-Ardından bu agent dosyasındaki **[B0] – [B16] kurallarını** uygula — özellikle **[B13] Context Yönetimi**, **[B14] Derin Teknik Analiz**, **[B15] Quality Gate** ve **[B16] Gereksinim → İmplementasyon İzlenebilirliği**.
+Ardından bu agent dosyasındaki **[B0] – [B19] kurallarını** uygula — özellikle **[B13] Context Yönetimi**, **[B14] Derin Teknik Analiz**, **[B15] Quality Gate**, **[B16] Gereksinim → İmplementasyon İzlenebilirliği**, **[B17] Yeni/Mevcut Ayrımı**, **[B18] Açıklayıcı Anlatım** ve **[B19] Öğe Düzeyi Açıklama + Self-Sufficiency**.
 
 ---
 
@@ -126,7 +127,8 @@ Bulunan her dosya için **mevcut konum (path) + sınıf adı** not edilir; yeni 
 Codebase keşfiyle paralel olarak **ekran tasarımı kaynaklı tam resource key envanteri** çıkarılır:
 
 1. **Kaynak sırası:** (a) Figma MCP (link SDLC dokümanında / kullanıcıdan), (b) ekran tasarım görselleri (uploads veya repo'daki tasarım dosyaları), (c) SDLC 4.1.X "Gösterilen Metinler" tabloları. Figma erişimi varsa **her ekran frame'i gezilir**; ekranda görünen **her metin öğesi** (başlık, label, placeholder, buton, popup, toast, hata mesajı, boş durum, tooltip) envantere alınır.
-2. Her metin için: `{ "ekran": "...", "komponent": "...", "resourceKey": "...", "tr": "...", "durum": "mevcut|yeni" }`. Key adı tasarımda yoksa SDLC 3.4.5'ten eşlenir; orada da yoksa konvansiyona göre önerilir ve `[ONERI]` etiketlenir.
+2. Her metin için: `{ "ekran": "...", "komponent": "...", "resourceKey": "...", "tr": "...", "durum": "mevcut|yeni", "figmaLink": "..." }`. Key adı tasarımda yoksa SDLC 3.4.5'ten eşlenir; orada da yoksa konvansiyona göre önerilir ve `[ONERI]` etiketlenir.
+2a. **Figma ekran linkleri:** Gezilen her ekran frame'inin **node-id'li paylaşılabilir URL'i** kaydedilir (`ekran_linkleri: { "{{Ekran adı}}": "https://figma.com/...?node-id=..." }`). Bu linkler iOS ve Android dokümanlarında ilgili 4.1.X bölümünde ZORUNLU olarak verilir — developer tasarıma dokümandan tek tıkla ulaşabilmeli. Figma erişimi yoksa `[BELIRSIZ — Figma linki eklenecek]` placeholder'ı bırakılır.
 3. `VpStringResource` (ChannelID=10) ile çapraz kontrol → `durum` alanı doldurulur (mevcut key yeniden yaratılmaz, mevcut adıyla kullanılır).
 4. Envanter `docs/.architect-context.json` `resource_key_envanteri` alanına yazılır ve **4 dokümanın tamamında** kullanılır ([B8]).
 5. **Eksiksizlik kuralı:** Bir ekranda görünen hiçbir metin envanter dışında kalamaz. Figma/görsel erişimi yoksa kullanıcıya AskUserQuestion ile sorulur; yine yoksa `[BELIRSIZ — ekran tasarımı erişilemedi, key envanteri SDLC ile sınırlı]` notu index Bölüm 10'a düşülür.
@@ -314,6 +316,12 @@ SDLC 4.3.1'deki **somut event listesi** her platform dokümanında implementasyo
 | 16 | **Endpoint Input/Output bütünlüğü** ([B16.1]) | Her endpoint için input + output alan tabloları ve "Response'ta Dönen ResourceKey'ler" tablosu dolu; tek satırlık endpoint tanımı yok |
 | 17 | **Client parametre eşlemesi** ([B16.2]) | iOS/Android'de her endpoint çağrısı için parametre eşleme + output kullanım tablosu mevcut |
 | 18 | **Kısaltma yasağı** ([B16.3]) | Her 4.1.X bölümünde template alt başlıklarının tamamı dolu; SDLC Bölüm 4'te karşılıksız gereksinim yok |
+| 19 | **Yeni/Mevcut statü etiketi** ([B17.1]) | Her teknik öğede statü etiketi var; "MEVCUT — genişletiliyor" öğelerde delta tablosu dolu; YENİ öğelerde keşif gerekçesi var |
+| 20 | **Statü tutarlılığı** ([B17.3]) | Aynı öğenin statüsü 4 dokümanda + context.json'da birebir aynı |
+| 21 | **Soru-Cevap kaydı** ([B17.2]) | Kullanıcıya sorulan her yeni/mevcut kararı index "Soru-Cevap Kaydı"nda; yanıtsızlar `[ACIK]` |
+| 22 | **Açıklayıcı anlatım** ([B18]) | Hiçbir alt bölüm doğrudan tabloyla başlamıyor; UI bölümlerinde ekran davranışı akış cümleleriyle anlatılmış; 4.1.X başına düz yazı ≥ ~150 kelime; dolgu cümlesi yok |
+| 23 | **Figma ekran linkleri** ([B3.1] 2a) | iOS/Android dokümanlarında her 4.1.X bölümünde ilgili ekranların node-id'li Figma linki var (erişim yoksa `[BELIRSIZ]` placeholder) |
+| 24 | **Öğe düzeyi açıklama** ([B19]) | Her metot/değişken/alan için ≥1-2 cümlelik amaç açıklaması + (MEVCUT)/(YENİ) etiketi; tek kelimelik açıklama yok; örtük bilgi varsayımı ("standart şekilde" vb.) yok |
 
 Tutarsızlık → düzelt veya `[ACIK]` işaretle.
 
@@ -418,6 +426,9 @@ Sunum öncesi `docs/.architect-completeness.md` üretilir; kriterler:
 | Her endpoint için Input/Output tabloları + Response ResourceKey tablosu ([B16.1]) | %100 | Eksik tablo doldurulur |
 | iOS/Android her endpoint çağrısında parametre eşleme tablosu ([B16.2]) | %100 | Eksik eşleme yazılır |
 | Her 4.1.X bölümünde template alt başlıklarının tamamı dolu ([B16.3]) | %100 | Kısaltılmış bölüm tamamlanır |
+| Her teknik öğede Yeni/Mevcut statü etiketi + 4 dokümanda tutarlı ([B17]) | %100 | Eksik etiket keşifle doldurulur veya kullanıcıya sorulur |
+| Her alt bölümde tablo öncesi açıklayıcı paragraf + 4.1.X başına ≥ ~150 kelime düz yazı ([B18]) | %100 | Sığ bölüm genişletilir |
+| Her metot/değişken/alanda amaç açıklaması + statü etiketi ([B19]) | %100 | Eksik açıklama tamamlanır |
 | Değiştirilen mevcut öğeler için [B14.2] regresyon tablosu | %100 | Caller taraması yapılır veya [BELIRSIZ] |
 | Her platformda DoD bölümü | %100 | Eksik DoD yazılır |
 
@@ -425,7 +436,7 @@ Skor < %75 → kullanıcıya AskUserQuestion: "devam / eksikleri tamamla / durdu
 
 ### [B15.2] Bağımsız Doğrulama Subagent'i — VARSAYILAN AÇIK
 
-- Self-review ([B12]) sonrası bir doğrulama subagent'i (Task) **temiz context'te** 4 dokümanı okur ve şunu denetler: "Uydurma path/class/method var mı (cache'te karşılığı olmayan)? Endpoint/resource key/pilot değerleri 4 dokümanda birebir senkron mu? Her endpoint'te Input/Output + Response ResourceKey tabloları dolu mu ([B16.1])? iOS/Android'de parametre eşleme tabloları var mı ([B16.2])? Herhangi bir 4.1.X bölümü kısaltılmış mı ([B16.3])? Key envanterinde olup dokümanda geçmeyen resource key var mı ([B8])? Regresyon tabloları ve hata senaryosu karşılıkları eksik mi? Şüpheci oku; her bulguya dosya + bölüm referansı ekle."
+- Self-review ([B12]) sonrası bir doğrulama subagent'i (Task) **temiz context'te** 4 dokümanı okur ve şunu denetler: "Uydurma path/class/method var mı (cache'te karşılığı olmayan)? Endpoint/resource key/pilot değerleri 4 dokümanda birebir senkron mu? Her endpoint'te Input/Output + Response ResourceKey tabloları dolu mu ([B16.1])? iOS/Android'de parametre eşleme tabloları var mı ([B16.2])? Herhangi bir 4.1.X bölümü kısaltılmış mı ([B16.3])? Key envanterinde olup dokümanda geçmeyen resource key var mı ([B8])? Statü etiketi olmayan veya dokümanlar arasında yeni/mevcut statüsü çelişen öğe var mı ([B17])? Keşifte mevcut karşılığı bulunan bir öğe gereksiz yere 'YENİ' yazılmış mı? Tablodan ibaret, açıklayıcı paragrafı olmayan bölüm veya ekran davranışı anlatılmamış UI bölümü var mı ([B18])? Amaç açıklaması tek kelimelik kalmış veya statü etiketi olmayan metot/değişken var mı; dokümanı tek başına okuyan bir AI agent soru sormadan kodlayabilir mi ([B19])? Regresyon tabloları ve hata senaryosu karşılıkları eksik mi? Şüpheci oku; her bulguya dosya + bölüm referansı ekle."
 - Bulgular `docs/architect/.review.md`'ye işlenir; kritik bulgu (uydurma path, senkron kırığı) düzeltilmeden sunum yapılmaz.
 - **İstisna:** Tek platform + tek işlev gibi çok küçük kapsamda kullanıcı onayıyla atlanabilir; varsayılan "çalıştır".
 
@@ -458,6 +469,101 @@ Tek satırlık "POST /api/x" YETERLİ DEĞİLDİR. Her endpoint için:
 - Template'teki alt başlık şablonu **her 4.1.X için TAM** doldurulur. İlk işlevde 11 alt başlık yazıp sonraki işlevlerde 3 alt başlığa düşmek YASAK ("yukarıdakiyle aynı" denmez; farklıysa yazılır, aynıysa somut referansla "3.1.X ile aynı, fark: ..." denir).
 - SDLC Bölüm 4'te olup hiçbir platform dokümanında bölümü olmayan gereksinim kalamaz (4.1.X'in tamamı + 4.3 loglama + 4.4 tanım gereksinimleri dahil).
 - Index dokümanında **İzlenebilirlik Matrisi** üretilir: 4.1.X ↔ endpoint(ler) ↔ backend class'ları ↔ iOS service metodu ↔ Android repository metodu ↔ resource key'ler.
+
+---
+
+## [B17] YENİ / MEVCUT AYRIMI + KULLANICIYLA SORU-CEVAP
+
+> Kullanıcı geri bildirimi (Haziran 2026): "Mevcut ekrana buton eklenecekse mw endpoint yeni yazılmayacak; mevcut endpoint'in output'una buton ismini dönen alan eklenecek. Dokümanda mevcut endpoint varsa mevcutta bulunduğunu yaz — sadece endpoint için değil, mevcutta olan HER ŞEY için."
+
+### [B17.1] Değişiklik Tipi Etiketi (ZORUNLU — her teknik öğede)
+
+Dokümanlarda geçen **her** teknik öğe (endpoint, controller/handler/usecase/service class, method, ekran, VC/Fragment, UI komponenti, DTO, resource key, MobileMenu kaydı, TransactionName) şu üç statüden biriyle etiketlenir:
+
+| Statü | Anlamı | Dokümanda yazım |
+|-------|--------|------------------|
+| **MEVCUT — değişmiyor** | Keşifle bulundu, olduğu gibi kullanılacak | "MEVCUT (`{{path}}`) — değişiklik yok, kullanılır" |
+| **MEVCUT — genişletiliyor** | Keşifle bulundu, üzerine ekleme/değişiklik yapılacak | "MEVCUT (`{{path}}`) — eklenecek: {{delta}}" + delta tablosu |
+| **YENİ** | Keşifte bulunamadı, sıfırdan yazılacak | "YENİ — gerekçe: mevcutta karşılığı yok ({{arama özeti}})" |
+
+Kurallar:
+
+1. **Önce mevcudu genişlet:** İhtiyacı mevcut bir öğe karşılayabiliyorsa YENİ öğe önerilmez. Örn. mevcut ekrana buton ekleniyorsa: yeni endpoint YAZILMAZ; o ekranı besleyen **mevcut endpoint'in output'una** yeni alan (örn. `buttonNameKey` / görünürlük flag'i) eklenir ve bu "MEVCUT — genişletiliyor" + delta tablosuyla gösterilir.
+2. **Delta tablosu (mevcut genişletilen öğe için):** yalnızca eklenen/değişen kısım yazılır — örn. "mevcut `GetX` response'una eklenen alanlar: `{{alan}}` (tip, açıklama, hangi client komponenti kullanır)". Mevcut alanlar yeniden listelenmez, sadece referans verilir.
+3. **YENİ etiketi kanıt ister:** Keşif yapılmadan "yeni yazılacak" denmez; [B3]/[B13.4] aramaları sonuçsuz kaldıysa arama özeti gerekçeye yazılır.
+4. Statü `.architect-context.json`'a işlenir (`"durum": "mevcut-degismiyor|mevcut-genisletiliyor|yeni"`) ve **4 dokümanda birebir aynı** olmak zorundadır — aynı öğe bir dokümanda "yeni", diğerinde "mevcut" olamaz.
+
+### [B17.2] Kullanıcıyla Soru-Cevap (Belirsiz Yeni/Mevcut Kararları)
+
+1. Keşif sonrası bir öğenin yeni mi yazılacağı yoksa mevcudun mu genişletileceği **kesinleşmediyse** (örn. benzer endpoint var ama kapsamı belirsiz), karar UYDURULMAZ; işlev başına toplanıp **tek AskUserQuestion** ile agent'ı kullanan kişiye sorulur:
+   ```
+   AskUserQuestion(questions: [{
+     question: "4.1.{{N}} için {{ihtiyaç}}: mevcut `{{endpoint/class}}` genişletilsin mi, yeni mi yazılsın?",
+     header: "Yeni/Mevcut",
+     options: [
+       { label: "Mevcudu genişlet", description: "{{mevcut öğe}} output/yapısına {{delta}} eklenir" },
+       { label: "Yeni yaz", description: "Ayrı {{öğe}} oluşturulur" }
+     ]
+   }])
+   ```
+2. Verilen yanıt karardır; ilgili bölüme "Kaynak: kullanıcı kararı ({{tarih}})" notuyla işlenir ve **index dokümanındaki "Soru-Cevap Kaydı"** bölümüne soru + yanıt + etkilenen bölümler olarak eklenir (modül 06/07 formatı).
+3. Kullanıcı yanıt veremezse `[ACIK — kullanıcı kararı bekleniyor]` etiketi düşülür; iki seçeneğin etkisi 1'er cümleyle yazılır.
+
+### [B17.3] Dokümanlar Arası Tutarlılık (Tek Kaynak: context.json)
+
+- Endpoint, class, resource key, statü (yeni/mevcut), pilot, event adı — hepsi `.architect-context.json`'dan yazılır; hiçbir doküman kendi başına farklı değer üretemez.
+- Bir dokümanda yapılan her düzeltme context.json'a, oradan diğer dokümanlara yansıtılır (tek yönlü senkron). [B12] kontrol 19-20 bunu denetler.
+
+---
+
+## [B18] AÇIKLAYICI ANLATIM — Tablo Tek Başına Yetersizdir
+
+> Kullanıcı geri bildirimi (Haziran 2026): "Dokümanlar çok sığ; kodlamada, ekranda ne yapılacağı açıklayıcı cümlelerle anlatılmalı." Tablolar veriyi taşır; **ne yapılacağını anlatan düz yazı paragrafları** dokümanın asıl gövdesidir.
+
+### [B18.1] Paragraf-Önce Kuralı
+
+- Her 3.x.X alt bölümü, tablo/kod bloğundan **önce** 2-5 cümlelik açıklayıcı paragrafla başlar: ne yapılacak, neden, mevcut yapıya nasıl bağlanacak, developer'ın dikkat etmesi gereken nokta.
+- Başlık altına doğrudan tablo veya tek maddelik bullet koymak YASAK. Tablo, üstündeki paragrafın kanıtı/detayıdır.
+
+### [B18.2] Ekran Davranışı Anlatımı (UI bölümleri)
+
+UI yerleşim/komponent bölümleri ekranın davranışını **kullanıcı gözünden, akış sırasıyla cümlelerle** anlatır:
+
+> Örnek: "Kullanıcı Alarmlarım sekmesine geldiğinde ekran açılışında `GET /api/currency-alarms` çağrılır ve dönen liste kart görünümünde gösterilir. Liste boşsa response'taki `emptyStateMessageKey` metniyle boş durum komponenti ve 'Alarm Kur' butonu gösterilir. Kullanıcı bir karta dokunduğunda detay bottom sheet'i açılır; sheet üzerindeki 'Sil' butonuna basıldığında `CurrencyAlarmDeleteConfirm` key'iyle onay popup'ı çıkar. 'Evet' seçilirse `DELETE /api/currency-alarms/{id}` çağrılır, başarı yanıtında liste yenilenir ve `resultMessageKey` toast olarak gösterilir."
+
+Kapsanması zorunlu: ekran açılışında ne olur → kullanıcı ne görür → her etkileşimde (dokunma/giriş/kaydırma) ne tetiklenir → başarı/hata/boş durumda ne gösterilir.
+
+### [B18.3] Kod / Servis Anlatımı
+
+- Her pseudocode/kod bloğunun üstünde implementasyonun yaklaşımını anlatan paragraf: hangi sınıf neden bu katmanda, akış hangi sırayla ilerler, emsalden ([B14.1]) hangi pattern alındı.
+- Servis çağrısı bölümlerinde uçtan uca akış cümlesi zorunlu: "Kullanıcı {{buton}}'a bastığında client önce {{validasyonlar}}'ı çalıştırır; geçerse `{{endpoint}}` `{{alanlar}}` ile çağrılır. Backend {{Handler}} → {{UseCase}} → `{{TXN}}` MCS zincirini işletir; başarılı yanıtında client {{ekran/komponent}} günceller, hata yanıtında response'taki `MessageKey` ile {{popup/inline}} gösterilir."
+
+### [B18.4] Derinlik Ölçütü
+
+- 4.1.X başına her platform dokümanında açıklayıcı düz yazı toplamı **en az ~150 kelime** (tablolar/kod hariç); altındaysa bölüm sığ kabul edilir ve genişletilir.
+- Anlatım kanıt-dayanaklıdır ([B2]); dolgu cümlesi ("gerekli geliştirmeler yapılacaktır" gibi içeriksiz ifadeler) YASAK — her cümle somut bilgi taşır.
+
+---
+
+## [B19] ÖĞE DÜZEYİ AÇIKLAMA + SELF-SUFFICIENCY
+
+> Kullanıcı geri bildirimi (Haziran 2026): "Yazılacak her bir metotun, değişkenin ne iş için olacağını detaylı açıklamak lazım; mevcutta olan bir şey ise yanında MEVCUT yazmalı. Doküman öyle olmalı ki developer ve AI agent'lar bu dokümandan her şeyi anlamalı."
+
+### [B19.1] Her Öğeye Amaç Açıklaması (ZORUNLU)
+
+Dokümanda bildirilen **her** metot, değişken, property, IBOutlet, View ID, DTO alanı, constant ve parametre için:
+
+1. **Amaç açıklaması:** En az 1-2 tam cümle — bu öğe ne iş yapar, ne zaman çağrılır/set edilir, hangi akışın parçasıdır, başka hangi öğelerle ilişkilidir. Tek kelimelik/etiket düzeyi açıklama ("buton", "liste", "servis çağrısı") YETERSİZDİR.
+   - YETERSİZ: `loadAlarms()` — "Liste yükler"
+   - YETERLİ: `loadAlarms()` — "Ekran açılışında (`viewWillAppear`) ve silme işlemi sonrası çağrılır; `GET /api/currency-alarms` endpoint'inden kullanıcının aktif alarmlarını çeker, sonucu `alarms` property'sine yazar ve `tableView.reloadData()` tetikler. Hata durumunda response'taki `MessageKey` ile inline hata state'ini gösterir."
+2. **Statü etiketi ([B17.1] ile tutarlı):** Öğe mevcutsa adının yanına **(MEVCUT)** yazılır + nerede tanımlı olduğu; yeni ise **(YENİ)**. Tablo formatlarında "Statü" kolonu kullanılır.
+3. **Değişken/property için ek olarak:** tipi, başlangıç değeri/nereden doldurulduğu, kimler tarafından okunduğu.
+
+### [B19.2] Self-Sufficiency İlkesi
+
+- Doküman, **hiçbir ek kaynak açmadan** bir developer'ın veya bir AI coding agent'ının işi uçtan uca yapabileceği kadar eksiksiz olmalıdır. Test: "Bu dokümanı tek başına bir AI agent'a versen, soru sormadan doğru kodu yazabilir mi?" — yanıt hayırsa eksik bilgi tamamlanır.
+- Dokümanda geçen her referans (class, endpoint, key, tablo, pattern) ya aynı dokümanda tanımlıdır ya da tam konum/bölüm linkiyle işaret edilir; "bilinen yapı", "standart şekilde" gibi örtük bilgi varsayımları YASAK.
+- Kısaltma/jargon ilk geçtiği yerde açılır (SDLC Bölüm 2 sözlüğüne referans yeterli).
 
 ---
 
@@ -499,6 +605,7 @@ Digest-first: önce summary/kaynak-özet JSON'ları; SDLC'den yalnızca ilgili 4
   "resource_key_envanteri": [
     { "ekran": "...", "komponent": "...", "resourceKey": "...", "tr": "...", "durum": "mevcut|yeni", "donen_endpoint": "..." }
   ],
+  "ekran_linkleri": { "Alarm Kurma Ekranı": "https://figma.com/...?node-id=..." },
   "yeni_transactionlar": [...],
   "pilot": { "key": "...", "ios_min_build": ..., "android_min_build": ... }
 }
@@ -508,6 +615,7 @@ Digest-first: önce summary/kaynak-özet JSON'ları; SDLC'den yalnızca ilgili 4
 
 - Repo cluster başına **paralel subagent fan-out** ([B13.3]); yalnızca yapısal bulgu döner, cache'e yazılır.
 - **Figma / ekran tasarımı key keşfi** ([B3.1]) bu adımda yapılır; tam envanter `resource_key_envanteri` olarak context.json'a yazılır.
+- Her bulunan öğeye **Yeni/Mevcut statüsü** atanır ([B17.1]); kesinleşmeyen kararlar işlev başına toplanıp **AskUserQuestion** ile kullanıcıya sorulur ([B17.2]).
 - Bu keşifte her 4.1.X için **emsal zincir** ([B14.1]) ve değiştirilen öğelerin **caller listesi** ([B14.2]) de çıkarılır.
 - Arama bütçesi [B13.4]; DB keşfi paralel, sonuçlar digest'e.
 

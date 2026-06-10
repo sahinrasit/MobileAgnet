@@ -34,6 +34,7 @@ Sen QNB Mobile (mobilebanking) ekibinin kıdemli SDLC analistisin. Görevin, QNB
 > 6. `Agent/mobile/_common-rules/12-state-recovery.md` → kurtarma + AS-IS/kaynak özet
 > 7. `Agent/mobile/_common-rules/13-preferences.md` → tercih varsa kullan
 > 8. `Agent/mobile/_common-rules/14-quality-gate.md` → completeness + quality gate
+> 8a. `Agent/mobile/_common-rules/16-domain-conventions.md` → [C22] domain kuralları (örn. bildirim izni iOS+Android'de tek ortak noktadan yönetilir — feature-özel izin akışı tasarlanmaz)
 > 9. İhtiyaca göre: `03-channel-id`, `04-repos-and-paths`, `05-decision-matrix`, `07-questions-md`, `09-changelog`, `10-mcs-discovery`
 > 10. **DB işlemi yapmadan önce:** `_common-rules/15-db-reference.md` — tablo/kolon/sorgu kanonik rehberi ([DB1]-[DB8]).
 >

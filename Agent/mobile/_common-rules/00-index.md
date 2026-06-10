@@ -21,11 +21,12 @@
 | 13 | [13-preferences.md](13-preferences.md) | docs/.mobile-preferences.json tercih saklama ([C20]) | Tüm agentlar |
 | 14 | [14-quality-gate.md](14-quality-gate.md) | Quality gate kriterleri, completeness raporu ([C21]) | Tüm agentlar + orchestrator |
 | 15 | [15-db-reference.md](15-db-reference.md) | DB kanonik referansı — CommonDb + MobileDefaultLog tüm tablolar, kolonlar, sorgular, şablonlar ([DB1]-[DB8]) | DB işlemi yapan tüm agentlar (mobile-00/01/02/04/05) |
+| 16 | [16-domain-conventions.md](16-domain-conventions.md) | Domain konvansiyonları — bildirim izni tek ortak noktadan yönetilir vb. ([C22]) | Tüm agentlar (özellikle mobile-00 + mobile-architect) |
 
 ## Hangi Modülü Ne Zaman Oku?
 
 **Her agent başında (zorunlu):**
-- 01 (dil/stil), 02 (MCP), 11 (pre-flight), 12 (state recovery), 13 (preferences)
+- 01 (dil/stil), 02 (MCP), 11 (pre-flight), 12 (state recovery), 13 (preferences), 16 (domain konvansiyonları)
 
 **İhtiyaca göre:**
 - 03 ChannelID: DB sorgusu varsa

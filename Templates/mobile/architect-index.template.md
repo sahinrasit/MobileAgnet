@@ -23,7 +23,7 @@
 7. Loglama Event Sözlüğü (snake_case — 3 platform aynı)
 8. Pilot ve MinBuildNumber Konfigürasyonu
 9. Sprint Koordinasyon Sırası
-10. Bilinmeyenler ve Belirsizlikler
+10. Bilinmeyenler ve Belirsizlikler + Soru-Cevap Kaydı (10.1)
 11. Master Definition of Done (DoD)
 
 ---
@@ -95,9 +95,9 @@
 
 > Backend dokümanındaki endpoint'lerin iOS ve Android tarafındaki çağrı kodlarıyla **birebir eşleşmesi** zorunlu ([B12] kontrol 3).
 
-| Endpoint | Method | Backend Handler | iOS Service | Android Repository | Request DTO | Response DTO |
-|----------|--------|------------------|-------------|---------------------|-------------|--------------|
-| `/api/{{kebab-1}}` | POST | `{{H1}}Handler` | `{{Service}}.create()` | `{{Repo}}.create()` | `{{Adi}}Request` | `{{Adi}}Response` |
+| Endpoint | Method | Statü ([B17.1]) | Backend Handler | iOS Service | Android Repository | Request DTO | Response DTO |
+|----------|--------|------------------|------------------|-------------|---------------------|-------------|--------------|
+| `/api/{{kebab-1}}` | POST | {{YENİ / MEVCUT — genişletiliyor}} | `{{H1}}Handler` | `{{Service}}.create()` | `{{Repo}}.create()` | `{{Adi}}Request` | `{{Adi}}Response` |
 | `/api/{{kebab-1}}` | GET | `{{H1}}Handler.List` | `{{Service}}.list()` | `{{Repo}}.list()` | — | `{{Adi}}ListResponse` |
 | `/api/{{kebab-1}}/{id}` | PUT | `{{H1}}Handler.Update` | `{{Service}}.update()` | `{{Repo}}.update()` | `{{Adi}}UpdateRequest` | `{{Adi}}UpdateResponse` |
 | `/api/{{kebab-1}}/{id}` | DELETE | `{{H1}}Handler.Delete` | `{{Service}}.delete()` | `{{Repo}}.delete()` | — | `{{Adi}}DeleteResponse` |
@@ -203,6 +203,19 @@
 
 ---
 
+## 10.1 Soru-Cevap Kaydı (Kullanıcı Kararları — [B17.2])
+
+> Keşifle kesinleşmeyen yeni/mevcut kararları agent'ı kullanan kişiye soruldu; yanıtlar karardır ve tüm dokümanlara işlendi.
+
+| # | Tarih | Soru | Kullanıcı Yanıtı | Etkilenen Bölümler |
+|---|-------|------|-------------------|---------------------|
+| 1 | {{TARIH}} | {{4.1.X için mevcut `{{öğe}}` genişletilsin mi, yeni mi yazılsın?}} | {{Mevcudu genişlet / Yeni yaz}} | `architect-backend.md` 3.x.3, `architect-ios.md` 3.x.5 |
+| 2 | ... | ... | ... | ... |
+
+> Yanıtsız sorular `[ACIK — kullanıcı kararı bekleniyor]` etiketiyle Bölüm 10 tablosuna da eklenir.
+
+---
+
 ## 11. Master Definition of Done
 
 Aşağıdaki maddelerin **hepsi** üç platformda ve cross-platform seviyesinde tamamlanmış olmalı:
@@ -220,6 +233,7 @@ Aşağıdaki maddelerin **hepsi** üç platformda ve cross-platform seviyesinde 
 - [ ] Endpoint sözleşmesi 3 platformda birebir aynı (Bölüm 5); her endpoint'te Input/Output + Response ResourceKey tabloları dolu ([B16.1])
 - [ ] Resource key adları 3 platformda birebir aynı; ekran tasarımındaki TÜM metinler envanterde (Bölüm 6)
 - [ ] SDLC Bölüm 4'teki her gereksinim izlenebilirlik matrisinde (Bölüm 4.1)
+- [ ] Her teknik öğede Yeni/Mevcut statüsü var ve 4 dokümanda tutarlı ([B17]); kullanıcı kararları Soru-Cevap Kaydı'nda (Bölüm 10.1)
 - [ ] Loglama event adları snake_case ve birebir aynı (Bölüm 7)
 - [ ] PilotKey + ReversePilot 3 platformda aynı davranıyor
 - [ ] UAT integration test 3 platformda da yeşil

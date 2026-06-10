@@ -47,11 +47,21 @@
 
 ## 3. Yapılacak İşler — İşlev Bazında
 
+> **[B18] ZORUNLU:** Her alt başlık tablodan/koddan önce 2-5 cümlelik açıklayıcı paragrafla başlar. UI bölümleri ekran davranışını kullanıcı gözünden akış sırasıyla anlatır (açılışta ne olur → kullanıcı ne görür → etkileşimde ne tetiklenir → başarı/hata/boş durumda ne gösterilir). Doğrudan tabloyla başlayan bölüm sığ kabul edilir.
+> **[B19] ZORUNLU:** Tablolardaki her metot, property, view ID ve alan için "ne iş yapar" açıklaması en az 1-2 tam cümledir; mevcut öğelerin yanına **(MEVCUT)** + konumu yazılır. Doküman tek başına bir developer'ın veya AI agent'ın soru sormadan kodlamasına yetecek kadar eksiksiz olmalıdır.
+
 ### 3.1 — 4.1.{{N}} {{İşlev Adı}}
 
 #### 3.1.0 Bağlam
 
 > 1-2 paragraf — SDLC 4.1.{{N}} girişinden: bu işlev kullanıcıya ne sağlar, mevcut akışa nasıl eklenir, Android tarafında hangi ekran/komponentler yapılır ve hangi backend endpoint'i kullanılır.
+
+**Ekran Tasarımları (Figma):**
+
+| Ekran | Figma Linki |
+|-------|--------------|
+| {{Ekran adı}} | [{{Ekran adı}}](https://figma.com/...?node-id={{...}}) veya `[BELIRSIZ — Figma linki eklenecek]` |
+| {{Popup / bottom sheet}} | {{link}} |
 
 #### 3.1.1 Mevcut Durum (Semantic-Search Bulgusu)
 
@@ -63,6 +73,8 @@
 | {{Mevcut Repository}} | `android/app/src/main/java/.../{{Repo}}.kt` | |
 
 #### 3.1.2 Eklenecek / Değişecek Dosyalar
+
+> Statü üç değerli ([B17.1]): **YENİ** / **MEVCUT — genişletiliyor** (delta yazılır) / **MEVCUT — değişmiyor** (kullanılır). Mevcut ekrana komponent ekleniyorsa Activity/Fragment/Layout "MEVCUT — genişletiliyor" olur, yeni ekran açılmaz.
 
 | Dosya | Tür | Değişiklik | Detay |
 |-------|------|------------|-------|
@@ -97,13 +109,15 @@ class CurrencyAlarmCreateFragment : Fragment() {
 }
 ```
 
-| Sınıf | Metod / View ID / Listener | İmza | Sorumluluk |
-|-------|----------------------------|------|------------|
-| {{Fragment}} | `onViewCreated(view:savedInstanceState:)` | override | Yaşam döngüsü |
-| {{Fragment}} | `setupListeners()` | private | Tıklama dinleyicileri |
-| {{ViewModel}} | `load{{Data}}()` | `suspend fun` | Repository çağrısı |
-| {{Layout}} | `@+id/{{view1}}` | `Button` | {{Hangi aksiyon}} |
-| {{Layout}} | `@+id/{{view2}}` | `TextView` | {{Hangi metin}} |
+> **[B19] ZORUNLU:** Her satırın "Ne İş Yapar" hücresi en az 1-2 tam cümle: öğe ne zaman çağrılır/set edilir, hangi akışın parçasıdır, hangi öğelerle ilişkilidir. Tek kelimelik açıklama yetersizdir. Mevcut öğelerin yanına **(MEVCUT)** + tanımlı olduğu yer yazılır.
+
+| Sınıf | Metod / View ID / Property | Statü | İmza | Ne İş Yapar (detaylı) |
+|-------|----------------------------|-------|------|------------------------|
+| {{Fragment}} | `onViewCreated(...)` | {{YENİ/MEVCUT}} | override | {{Örn: "Ekran ilk yüklendiğinde çalışır; metinleri 3.1.5'teki key'lerden set eder, `setupListeners()` ve `observeViewModel()` çağırır, ardından `viewModel.load{{Data}}()` tetikler."}} |
+| {{Fragment}} | `setupListeners()` | {{...}} | private | {{Örn: "{{buton}}/{{alan}} tıklama dinleyicilerini bağlar; {{buton}} tıklamasında validasyon → `viewModel.create()` akışını başlatır."}} |
+| {{ViewModel}} | `uiState` | {{...}} | `StateFlow<{{State}}>` | {{Örn: "Liste/yükleniyor/hata/boş durumlarını tutar; Fragment collect ederek UI'ı günceller, repository yanıtlarıyla set edilir."}} |
+| {{ViewModel}} | `load{{Data}}()` | {{...}} | `suspend fun` | {{Örn: "Ekran açılışında ve silme sonrası çağrılır; `{{Repo}}.list()` üzerinden `GET {{endpoint}}`'i çağırır, sonucu `uiState`'e yazar."}} |
+| {{Layout}} | `@+id/{{view1}}` | {{...}} | `Button` | {{Örn: "{{İşlem}} başlatma butonu; metni response'taki `{{buttonNameKey}}` değerinden gelir, `{{koşul}}`'da gizlenir."}} |
 
 #### 3.1.4 Huawei Build Farkı
 
@@ -141,10 +155,12 @@ Toast.makeText(context, response.resultMessage, Toast.LENGTH_SHORT).show()
 
 > Android doğrudan MCS çağırmaz. Endpoint sözleşmesi `architect-backend.md` Bölüm 3.x'te.
 
-| Endpoint (mwbackend) | Android Repository Metodu | Request DTO | Response DTO | Tetiklendiği Yer |
-|----------------------|---------------------------|-------------|---------------|-------------------|
-| `POST /api/{{kebab-konu}}` | `{{Repo}}.create(req)` | `{{Konu}}CreateRequest` | `{{Konu}}CreateResponse` | {{Buton / lifecycle}} |
-| `GET /api/{{kebab-konu}}` | `{{Repo}}.list()` | — | `{{Konu}}ListResponse` | `onResume` |
+> **[B17.1]:** Endpoint statüsü (YENİ / MEVCUT — genişletiliyor / MEVCUT) backend dokümanıyla birebir aynı yazılır. Mevcut endpoint genişletiliyorsa Android tarafında yalnızca **eklenen alanların** kullanımı yazılır.
+
+| Endpoint (mwbackend) | Statü | Android Repository Metodu | Request DTO | Response DTO | Tetiklendiği Yer |
+|----------------------|-------|---------------------------|-------------|---------------|-------------------|
+| `POST /api/{{kebab-konu}}` | {{YENİ / MEVCUT...}} | `{{Repo}}.create(req)` | `{{Konu}}CreateRequest` | `{{Konu}}CreateResponse` | {{Buton / lifecycle}} |
+| `GET /api/{{kebab-konu}}` | {{...}} | `{{Repo}}.list()` | — | `{{Konu}}ListResponse` | `onResume` |
 | `PUT /api/{{kebab-konu}}/{id}` | `{{Repo}}.update(id, req)` | `{{Konu}}UpdateRequest` | `{{Konu}}UpdateResponse` | {{...}} |
 | `DELETE /api/{{kebab-konu}}/{id}` | `{{Repo}}.delete(id)` | — | `{{Konu}}DeleteResponse` | {{...}} |
 
@@ -181,6 +197,10 @@ class CurrencyAlarmRepository @Inject constructor(
 ```
 
 #### 3.1.7 UI Komponent Yerleşimi (SDLC 4.1.X step 2 + 3'ten)
+
+**Ekran davranışı ([B18.2]):**
+
+> {{Akış sırasıyla anlatım — örnek: "Kullanıcı {{giriş noktası}}'ndan ekrana geldiğinde açılışta `{{endpoint}}` çağrılır ve {{ne gösterilir}}. {{Alan}}'a dokunduğunda {{bottom sheet}} açılır; seçim sonrası {{ne olur}}. {{Buton}}'a basıldığında {{validasyon → servis → başarı/hata akışı}}. Liste boşsa {{empty state}}, servis hatasında `MessageKey` ile {{popup/inline}} gösterilir."}}
 
 | SDLC Bulgusu | Android Karşılığı |
 |--------------|-------------------|
@@ -337,6 +357,7 @@ if (BuildConfig.VERSION_CODE < {{MIN_BUILD_ANDROID}}) {
 | Kaynak | Yol |
 |--------|-----|
 | SDLC analiz | `docs/mobile-sdlc-analiz.md` |
+| Figma ekran tasarımları | Her işlevin 3.x.0 Bağlam bölümündeki link tabloları |
 | Cross-platform overview | `docs/architect/architect-index.md` |
 | Backend sözleşmesi | `docs/architect/architect-backend.md` |
 | Codebase keşfi cache | `docs/.architect-codebase-cache.json` |
