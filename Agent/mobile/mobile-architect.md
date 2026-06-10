@@ -50,7 +50,7 @@ Sırasıyla `Read`:
 10. `Agent/mobile/_common-rules/14-quality-gate.md`
 11. `Agent/mobile/_common-rules/15-db-reference.md` (tablo şemaları)
 
-Ardından bu agent dosyasındaki **[B0] – [B15] kurallarını** uygula — özellikle **[B13] Context Yönetimi**, **[B14] Derin Teknik Analiz** ve **[B15] Quality Gate**.
+Ardından bu agent dosyasındaki **[B0] – [B16] kurallarını** uygula — özellikle **[B13] Context Yönetimi**, **[B14] Derin Teknik Analiz**, **[B15] Quality Gate** ve **[B16] Gereksinim → İmplementasyon İzlenebilirliği**.
 
 ---
 
@@ -94,6 +94,7 @@ Bu agentın doğru çıktı vermesi için SDLC dokümanından şu bilgileri çı
 | 4.1.X işlev listesi + adları | `summary.json` `islevler` veya SDLC 4.1 | Her platform dokümanında 4.1.X kırılımı |
 | Yeni TransactionName listesi | `summary.json` `yeni_transactionlar` | Backend bölümü 3.x |
 | Yeni resource key listesi | `summary.json` `yeni_resource_keys` | 3 platformda da Resource key haritası |
+| **Ekran tasarımındaki TÜM metin/resource keyler (mevcut + yeni)** | **Figma MCP / ekran tasarım görselleri + SDLC 4.1.X "Gösterilen Metinler"** | **[B8] Tam Key Envanteri — 3 platform + index. Yalnızca yeni key'lerle yetinmek YASAK** |
 | Menü değişiklikleri | `summary.json` `menu_degisiklikleri` | Backend + Index |
 | Etki 3.4 (kanal/cms/sas/...) | `summary.json` `etki_3_4` | Index Etki Özeti |
 | Loglama 4.3 | `summary.json` `loglama_4_3` | 3 platformda da loglama bölümü |
@@ -119,6 +120,16 @@ Her 4.1.X işlevi için **5 repo cluster** ile arama yapılır (common-rules mod
 > Sonuçlar `docs/.architect-codebase-cache.json`'a yazılır; aynı 4.1.X'in tekrar aranması engellenir.
 
 Bulunan her dosya için **mevcut konum (path) + sınıf adı** not edilir; yeni eklemeler bu konumlara göre önerilir.
+
+### [B3.1] Figma / Ekran Tasarımı Key Keşfi (ZORUNLU)
+
+Codebase keşfiyle paralel olarak **ekran tasarımı kaynaklı tam resource key envanteri** çıkarılır:
+
+1. **Kaynak sırası:** (a) Figma MCP (link SDLC dokümanında / kullanıcıdan), (b) ekran tasarım görselleri (uploads veya repo'daki tasarım dosyaları), (c) SDLC 4.1.X "Gösterilen Metinler" tabloları. Figma erişimi varsa **her ekran frame'i gezilir**; ekranda görünen **her metin öğesi** (başlık, label, placeholder, buton, popup, toast, hata mesajı, boş durum, tooltip) envantere alınır.
+2. Her metin için: `{ "ekran": "...", "komponent": "...", "resourceKey": "...", "tr": "...", "durum": "mevcut|yeni" }`. Key adı tasarımda yoksa SDLC 3.4.5'ten eşlenir; orada da yoksa konvansiyona göre önerilir ve `[ONERI]` etiketlenir.
+3. `VpStringResource` (ChannelID=10) ile çapraz kontrol → `durum` alanı doldurulur (mevcut key yeniden yaratılmaz, mevcut adıyla kullanılır).
+4. Envanter `docs/.architect-context.json` `resource_key_envanteri` alanına yazılır ve **4 dokümanın tamamında** kullanılır ([B8]).
+5. **Eksiksizlik kuralı:** Bir ekranda görünen hiçbir metin envanter dışında kalamaz. Figma/görsel erişimi yoksa kullanıcıya AskUserQuestion ile sorulur; yine yoksa `[BELIRSIZ — ekran tasarımı erişilemedi, key envanteri SDLC ile sınırlı]` notu index Bölüm 10'a düşülür.
 
 ### [B4] DB Keşfi (mssql)
 
@@ -158,11 +169,12 @@ Her platform dokümanı (iOS / Android / Backend) aşağıdaki **8 ana bölüm**
 2. Etkilenen Modül / Klasör Haritası (repo path'leri + sorumluluk)
 3. Yapılacak İşler — İşlev Bazında (4.1.X başına ayrı alt başlık)
    3.1 4.1.X İşlev Adı
+       3.1.0 Bağlam (1-2 paragraf: işlev kullanıcıya ne sağlar, mevcut akışa nasıl eklenir — SDLC 4.1.X girişinden; örn. "Bu işlev, kullanıcıya alarm tanımı oluşturma yeteneği sağlar. Mevcut akışın içine yeni alarm kurma ekranı eklenerek ...")
        3.1.1 Mevcut durum (semantic-search bulgusu)
        3.1.2 Eklenecek / değişecek dosyalar (tablo)
        3.1.3 Yeni / değişen sınıf, metod, IBOutlet, View ID (tablo)
-       3.1.4 Resource key kullanımı (SDLC 3.4.5 ile eşleşmeli)
-       3.1.5 Servis / endpoint çağrıları (mwbackend ile koordinasyon)
+       3.1.4 Resource key kullanımı ([B8] envanteri — bu ekrana ait TÜM keyler)
+       3.1.5 Servis / endpoint çağrıları — endpoint adı + parametre eşlemesi ([B16])
        3.1.6 UI komponent yerleşimi (SDLC 4.1.X step 2 + step 3)
        3.1.7 Form validasyon implementasyonu (SDLC 4.1.X step 5 → kod)
        3.1.8 Loglama (TrackMobileEvent / Dataroid / Adjust / SAS event payload)
@@ -170,7 +182,7 @@ Her platform dokümanı (iOS / Android / Backend) aşağıdaki **8 ana bölüm**
        3.1.10 Test noktaları (TC-MOB-* listesi)
    3.2 4.1.Y İşlev Adı
        ...
-4. Ortak Değişiklikler (Localizable, NetworkLayer, ResourceManager — proje genelinde)
+4. Ortak Değişiklikler (ResourceManager, NetworkLayer — proje genelinde; lokal bundle yalnızca keşifle kanıtlanırsa)
 5. Pilot ve Versiyon Konfigürasyonu (PilotKey, MinBuildNumber)
 6. Bağımlılık Sırası (önce mwbackend mock → sonra iOS/Android integration vb.)
 7. Test ve Doğrulama Notları
@@ -194,30 +206,36 @@ Kurallar:
 3. **Metod adı:** camelCase / PascalCase platform konvansiyonuna göre. Mevcut benzer metod isimleri (örn. iOS'ta `didTap{{Konu}}Button`) gözlenip türetilir.
 4. **Path uydurma YASAK.** semantic-search ile doğrulanmadıysa `[BELIRSIZ]`.
 
-### [B8] Resource Key Sözlüğü — 3 Platformda Senkron
+### [B8] Resource Key Envanteri — Tam Liste + Endpoint Output Üzerinden Dağıtım
 
-SDLC 3.4.5 CMS tablosu **tek doğru kaynak** ([A14] / [A6.2] kontrol 8). Her platform dokümanı:
+**Kaynak:** [B3.1] envanteri (Figma MCP / ekran tasarım görselleri + SDLC 3.4.5 + VpStringResource çapraz kontrolü). SDLC 3.4.5 yalnızca *yeni* key'leri listeler; platform dokümanlarında **ekranda görünen TÜM keyler** (mevcut + yeni) yer almak zorundadır.
 
-- iOS: `Localizable.strings` (tr / en / ar) + iOS kullanım yeri (örn. `viewController.titleLabel.text = "CurrencyAlarmCreatedToast".localized()`)
-- Android: `res/values/strings.xml`, `values-en/strings.xml`, `values-ar/strings.xml` + `R.string.currency_alarm_created_toast` kullanım yeri
-- Backend: ResourceKey'lerin servis hatalarında / SMS/PN template'lerinde kullanım yeri (varsa)
+**Dağıtım modeli (KRİTİK):** Resource key değerleri client'a **mwbackend endpoint output'unda döner** (`VpStringResource`, ChannelID=10 kaynaklı). Client'lar metinleri lokal strings dosyasından değil, endpoint response'undan / ResourceManager üzerinden alır.
 
-> Resource key adları **SDLC 3.4.5 ile birebir aynı**. Yeniden adlandırma YASAK. Hata yakalanırsa cross-reference [A6.2] kontrol 8 fail eder.
+- **Backend:** Her endpoint'in Response modelinde **hangi alanın hangi ResourceKey'(ler)i döndürdüğü** açıkça tablolanır ("Response'ta Dönen ResourceKey'ler" tablosu — template 3.1.3). Başarı/hata mesajı, popup başlığı, buton metni gibi ekranda gösterilecek her metnin key'i output'a eklenir. `BusinessException` → ResourceKey eşlemesi de bu tabloda.
+- **iOS:** Her key için: hangi endpoint response alanından okunur + hangi UI komponentine bağlanır (örn. `response.resourceKeys["CurrencyAlarmCreatedToast"] → Toast.show(...)`).
+- **Android:** Aynı eşleme `Repository → ViewModel state → binding` zinciriyle yazılır.
+- Codebase keşfi lokal bundle (Localizable.strings / strings.xml) mekanizmasının da kullanıldığını **kanıtlarsa**, hangi key'in hangi mekanizmadan geldiği ayrı kolonla belirtilir; kanıt yoksa lokal bundle varsayımı YAZILMAZ.
+
+> Resource key adları envanterle **birebir aynı**. Yeniden adlandırma YASAK. Ekranda görünen ama hiçbir dokümanda geçmeyen key → [B12] kontrol 15 fail eder.
 
 ### [B9] MCS ve Endpoint Sözleşmesi — Backend Doc + iOS/Android Koordinasyonu
 
 Backend dokümanı her yeni MCS TransactionName için (SDLC [A17.1] bloğundan):
 
-- DDD katmanları (Controller → Handler → UseCase → Service)
+- DDD katmanları (Controller → Handler → UseCase → Service) — **her katman için class + method adı**
 - TransactionName Constant ekleme (`TransactionNameConstants.{{TXN}}`)
-- Request / Response model alanları (C17 Tablo B)
+- **Çağrılan MCS servisleri:** TransactionName + Request/Response tipi + hangi Service class'ının hangi metodu çağırıyor (C17 Tablo A/B)
 - Çağrı zinciri (C17 Tablo C) — pseudocode
 - REST endpoint (örn. `POST /api/currency-alarm/create`) — mwbackend tarafından açılan dış endpoint
+- **Endpoint Input tablosu:** her alan — ad, tip, zorunlu, kaynak (client form alanı / session)
+- **Endpoint Output tablosu:** client'a dönen her alan — ad, tip, açıklama + **"Response'ta Dönen ResourceKey'ler" tablosu** ([B8])
 
 iOS / Android dokümanları **mwbackend endpoint'ini çağıran network layer kodu** önerir:
 
 - iOS: `CurrencyAlarmService.create(req:) → AnyPublisher<...>`
 - Android: `CurrencyAlarmRepository.create(req): Result<...>`
+- Her çağrı için **parametre eşleme tablosu**: endpoint input alanı ↔ client'ta hangi UI alanından/state'ten doldurulur; endpoint output alanı ↔ hangi UI komponentinde gösterilir.
 
 > iOS/Android **doğrudan MCS çağırmaz**; her zaman mwbackend endpoint'i üzerinden geçer. Endpoint isimlendirme [B9.1] convention'a göre.
 
@@ -292,6 +310,10 @@ SDLC 4.3.1'deki **somut event listesi** her platform dokümanında implementasyo
 | 12 | **Callers / regresyon tablosu** ([B14.2]) | Değiştirilen her mevcut dosya/method için çağıran listesi + regresyon riski satırı mevcut |
 | 13 | **Hata ve edge-case implementasyonu** ([B14.3]) | SDLC'deki her hata/boş/timeout/sınır senaryosunun platform karşılığı (handler/state/komponent) yazılı |
 | 14 | **[BELIRSIZ] oranı eşiği** | Bir platform dokümanında `[BELIRSIZ]` etiketli teknik öğe oranı >%20 ise kullanıcıya açıkça raporlanır ("keşif yetersiz — şu aramalar başarısız oldu") |
+| 15 | **Tam key envanteri kapsaması** ([B3.1]/[B8]) | Figma/ekran tasarımındaki HER metin envanterde ve ilgili işlev bölümlerinde + index haritasında geçiyor; eksik key yok |
+| 16 | **Endpoint Input/Output bütünlüğü** ([B16.1]) | Her endpoint için input + output alan tabloları ve "Response'ta Dönen ResourceKey'ler" tablosu dolu; tek satırlık endpoint tanımı yok |
+| 17 | **Client parametre eşlemesi** ([B16.2]) | iOS/Android'de her endpoint çağrısı için parametre eşleme + output kullanım tablosu mevcut |
+| 18 | **Kısaltma yasağı** ([B16.3]) | Her 4.1.X bölümünde template alt başlıklarının tamamı dolu; SDLC Bölüm 4'te karşılıksız gereksinim yok |
 
 Tutarsızlık → düzelt veya `[ACIK]` işaretle.
 
@@ -392,7 +414,10 @@ Sunum öncesi `docs/.architect-completeness.md` üretilir; kriterler:
 | Her seçili platformda her 4.1.X bölümü mevcut | %100 | Eksik bölüm yazılır |
 | Her yeni TransactionName için DDD zinciri + Request/Response modeli dolu | %100 | C17 keşfine geri dön |
 | Dosya yollarının kaynak-doğrulanma oranı | ≥ %80 (gerisi `[BELIRSIZ]` etiketli) | <%80 ise kullanıcıya keşif eksikliği raporlanır |
-| Resource key senkronu (SDLC 3.4.5 ↔ 3 platform) | %100 | Eksik key eklenir |
+| Resource key senkronu ([B3.1] tam envanter ↔ 3 platform + index) | %100 | Eksik key eklenir |
+| Her endpoint için Input/Output tabloları + Response ResourceKey tablosu ([B16.1]) | %100 | Eksik tablo doldurulur |
+| iOS/Android her endpoint çağrısında parametre eşleme tablosu ([B16.2]) | %100 | Eksik eşleme yazılır |
+| Her 4.1.X bölümünde template alt başlıklarının tamamı dolu ([B16.3]) | %100 | Kısaltılmış bölüm tamamlanır |
 | Değiştirilen mevcut öğeler için [B14.2] regresyon tablosu | %100 | Caller taraması yapılır veya [BELIRSIZ] |
 | Her platformda DoD bölümü | %100 | Eksik DoD yazılır |
 
@@ -400,9 +425,39 @@ Skor < %75 → kullanıcıya AskUserQuestion: "devam / eksikleri tamamla / durdu
 
 ### [B15.2] Bağımsız Doğrulama Subagent'i — VARSAYILAN AÇIK
 
-- Self-review ([B12]) sonrası bir doğrulama subagent'i (Task) **temiz context'te** 4 dokümanı okur ve şunu denetler: "Uydurma path/class/method var mı (cache'te karşılığı olmayan)? Endpoint/resource key/pilot değerleri 4 dokümanda birebir senkron mu? Regresyon tabloları ve hata senaryosu karşılıkları eksik mi? Şüpheci oku; her bulguya dosya + bölüm referansı ekle."
+- Self-review ([B12]) sonrası bir doğrulama subagent'i (Task) **temiz context'te** 4 dokümanı okur ve şunu denetler: "Uydurma path/class/method var mı (cache'te karşılığı olmayan)? Endpoint/resource key/pilot değerleri 4 dokümanda birebir senkron mu? Her endpoint'te Input/Output + Response ResourceKey tabloları dolu mu ([B16.1])? iOS/Android'de parametre eşleme tabloları var mı ([B16.2])? Herhangi bir 4.1.X bölümü kısaltılmış mı ([B16.3])? Key envanterinde olup dokümanda geçmeyen resource key var mı ([B8])? Regresyon tabloları ve hata senaryosu karşılıkları eksik mi? Şüpheci oku; her bulguya dosya + bölüm referansı ekle."
 - Bulgular `docs/architect/.review.md`'ye işlenir; kritik bulgu (uydurma path, senkron kırığı) düzeltilmeden sunum yapılmaz.
 - **İstisna:** Tek platform + tek işlev gibi çok küçük kapsamda kullanıcı onayıyla atlanabilir; varsayılan "çalıştır".
+
+---
+
+## [B16] GEREKSİNİM → İMPLEMENTASYON İZLENEBİLİRLİĞİ (Her 4.1.X İçin Tam Zincir)
+
+> Kullanıcı/analist geri bildirimi (Haziran 2026): "Her bir developer ne yapacağını net şekilde bilmeli." SDLC **Bölüm 4 (Yazılımın Fonksiyonel Gereksinimleri)** altındaki **her gereksinim**, seçili her platform dokümanında "nasıl yapılacağı" sorusunu eksiksiz yanıtlayacak derinlikte yer almak ZORUNDADIR.
+
+### [B16.1] Backend Zorunlu Asgari İçerik (her 4.1.X için)
+
+Tek satırlık "POST /api/x" YETERLİ DEĞİLDİR. Her endpoint için:
+
+1. **Endpoint adı + HTTP method + route** ve Controller class + action method adı.
+2. **Input tablosu:** her request alanı — ad, tip, zorunlu, kaynağı (client form alanı / session / path param).
+3. **Output tablosu:** client'a dönen her alan — ad, tip, açıklama.
+4. **Response'ta Dönen ResourceKey'ler tablosu** ([B8]): hangi response alanı hangi key'(ler)i taşıyor; hata durumunda BusinessException → ResourceKey eşlemesi.
+5. **Çağrılan MCS servisleri:** TransactionName, Request/Response tipi, çağıran Service class + method adı, çağrı sırası/koşulu.
+6. **Class/method listesi:** Controller / Handler / UseCase / Helper / Service — her biri dosya yolu + class adı + public method imzaları.
+
+### [B16.2] iOS / Android Zorunlu Asgari İçerik (her 4.1.X için)
+
+1. **Hangi backend endpoint'i çağrılıyor** (method + route) ve hangi Service/Repository metodu üzerinden.
+2. **Parametre eşleme tablosu (request):** endpoint input alanı ↔ hangi UI alanı/state'ten doldurulur.
+3. **Output kullanım tablosu (response):** endpoint output alanı (resource key alanları dahil) ↔ hangi UI komponentinde / state'te kullanılır.
+4. Çağrının tetiklendiği yer (buton/lifecycle) + başarı/hata akışı.
+
+### [B16.3] Kısaltma Yasağı (Anti-Degradation)
+
+- Template'teki alt başlık şablonu **her 4.1.X için TAM** doldurulur. İlk işlevde 11 alt başlık yazıp sonraki işlevlerde 3 alt başlığa düşmek YASAK ("yukarıdakiyle aynı" denmez; farklıysa yazılır, aynıysa somut referansla "3.1.X ile aynı, fark: ..." denir).
+- SDLC Bölüm 4'te olup hiçbir platform dokümanında bölümü olmayan gereksinim kalamaz (4.1.X'in tamamı + 4.3 loglama + 4.4 tanım gereksinimleri dahil).
+- Index dokümanında **İzlenebilirlik Matrisi** üretilir: 4.1.X ↔ endpoint(ler) ↔ backend class'ları ↔ iOS service metodu ↔ Android repository metodu ↔ resource key'ler.
 
 ---
 
@@ -441,6 +496,9 @@ Digest-first: önce summary/kaynak-özet JSON'ları; SDLC'den yalnızca ilgili 4
     }
   ],
   "yeni_resource_keys": [...],
+  "resource_key_envanteri": [
+    { "ekran": "...", "komponent": "...", "resourceKey": "...", "tr": "...", "durum": "mevcut|yeni", "donen_endpoint": "..." }
+  ],
   "yeni_transactionlar": [...],
   "pilot": { "key": "...", "ios_min_build": ..., "android_min_build": ... }
 }
@@ -449,6 +507,7 @@ Digest-first: önce summary/kaynak-özet JSON'ları; SDLC'den yalnızca ilgili 4
 ### Adım 3: Codebase + DB Keşfi ([B3] + [B4] + [B13.3] + [B13.4])
 
 - Repo cluster başına **paralel subagent fan-out** ([B13.3]); yalnızca yapısal bulgu döner, cache'e yazılır.
+- **Figma / ekran tasarımı key keşfi** ([B3.1]) bu adımda yapılır; tam envanter `resource_key_envanteri` olarak context.json'a yazılır.
 - Bu keşifte her 4.1.X için **emsal zincir** ([B14.1]) ve değiştirilen öğelerin **caller listesi** ([B14.2]) de çıkarılır.
 - Arama bütçesi [B13.4]; DB keşfi paralel, sonuçlar digest'e.
 

@@ -33,7 +33,7 @@
 |----------------|------------|------------------|
 | `android/app/src/main/java/.../feature/{{modul}}/` | Feature module (Activity/Fragment/ViewModel) | {{Yeni / Değişen}} |
 | `android/app/src/main/res/layout/` | Layout XML | {{Yeni / Değişen}} |
-| `android/app/src/main/res/values/strings.xml` (+ values-en, values-ar) | Resource key değerleri | Değişen |
+| `android/core/.../ResourceManager.kt` | Resource key okuma (backend endpoint output — [B8]) | Değişmez (kullanılır) |
 | `android/app/src/google/...` | Google build varyantı (FCM) | {{Yeni / Değişen}} |
 | `android/app/src/huawei/...` | Huawei build varyantı (HMS) | {{Yeni / Değişen}} |
 | `android/app/src/main/AndroidManifest.xml` | İzinler / deep link / activity | {{Değişen / Değişmez}} |
@@ -48,6 +48,10 @@
 ## 3. Yapılacak İşler — İşlev Bazında
 
 ### 3.1 — 4.1.{{N}} {{İşlev Adı}}
+
+#### 3.1.0 Bağlam
+
+> 1-2 paragraf — SDLC 4.1.{{N}} girişinden: bu işlev kullanıcıya ne sağlar, mevcut akışa nasıl eklenir, Android tarafında hangi ekran/komponentler yapılır ve hangi backend endpoint'i kullanılır.
 
 #### 3.1.1 Mevcut Durum (Semantic-Search Bulgusu)
 
@@ -68,7 +72,7 @@
 | `android/.../feature/{{modul}}/{{ViewModel}}.kt` | ViewModel | {{Yeni / Değişen}} | UI state + business logic |
 | `android/.../feature/{{modul}}/{{Repository}}.kt` | Repository | {{Yeni / Değişen}} | API çağrısı |
 | `android/.../feature/{{modul}}/model/{{Model}}.kt` | Data class | {{Yeni / Değişen}} | Request / Response DTO |
-| `android/app/src/main/res/values/strings.xml` (+ -en, -ar) | Resource | Değişen | Yeni string key |
+| Resource key'ler | `VpStringResource` ChannelID=10 (mobile-05) | Değişen | Yeni key — backend output'unda döner ([B8]) |
 | `android/app/src/main/AndroidManifest.xml` | Manifest | {{Değişen / Değişmez}} | (varsa) izin / deep link |
 
 #### 3.1.3 Yeni / Değişen Sınıf, Metod, View ID
@@ -115,38 +119,50 @@ QNB mobil Huawei için ayrı build varyantı kullanır. Aşağıdaki dosyalar va
 
 > Bu özellikte Huawei'e özel davranış gerekli ise dosyalar ayrı listelenir. Aksi halde "Bu işlevde Google ve Huawei build aynı davranır."
 
-#### 3.1.5 Resource Key Kullanımı (SDLC 3.4.5 ile Senkron)
+#### 3.1.5 Resource Key Kullanımı ([B8] Envanteri — Bu Ekranın TÜM Key'leri)
 
-> Android resource key adlandırması SDLC'deki key'lerin **snake_case karşılığı** olabilir; ancak SDLC ile birebir aynı **mantıksal key adıyla** çalışılır.
+> Kaynak: [B3.1] tam key envanteri (Figma / ekran tasarımı + SDLC). Bu ekranda görünen **her metin** (mevcut + yeni key) bu tabloda yer alır.
+> **Dağıtım modeli:** Resource key değerleri client'a **backend endpoint output'unda döner**; metin lokal `strings.xml`'den değil response'tan / ResourceManager'dan okunur.
 
-| ResourceKey (SDLC) | Android `R.string` Adı | Kullanım Yeri |
-|---------------------|------------------------|----------------|
-| `CurrencyAlarmCreatedToast` | `R.string.currency_alarm_created_toast` | Toast |
-| `CurrencyAlarmDeleteConfirm` | `R.string.currency_alarm_delete_confirm` | AlertDialog message |
+| ResourceKey | Durum | Dönen Endpoint / Response Alanı | Android Kullanım Yeri |
+|-------------|-------|----------------------------------|------------------------|
+| `CurrencyAlarmCreatedToast` | yeni | `POST /api/currency-alarms` → `resultMessageKey` | Toast |
+| `CurrencyAlarmDeleteConfirm` | yeni | `GET /api/currency-alarms` → `resourceKeys` | AlertDialog message |
 
-```xml
-<!-- values/strings.xml -->
-<string name="currency_alarm_created_toast">Alarmınızı kurduk.</string>
-
-<!-- values-en/strings.xml -->
-<string name="currency_alarm_created_toast">{{[ÇEVİRİ GEREKLİ]}}</string>
-
-<!-- values-ar/strings.xml -->
-<string name="currency_alarm_created_toast">{{[ÇEVİRİ GEREKLİ]}}</string>
+```kotlin
+// Response'tan key okuma — örnek
+binding.tvTitle.text = response.resourceKeys["{{KEY_1}}"]
+Toast.makeText(context, response.resultMessage, Toast.LENGTH_SHORT).show()
 ```
 
-> Yeni key'ler `mobile-05-write-implementation-scripts` ile `VpStringResource`'ta tutulur; iOS / Android / Web aynı key'i kullanır.
+> Yeni key'ler `mobile-05-write-implementation-scripts` ile `VpStringResource`'ta (ChannelID=10) tutulur; backend bunları endpoint output'una koyar — iOS / Android / Web aynı key'i kullanır. Codebase keşfi lokal `strings.xml` kullanımını **kanıtlarsa** ilgili key satırına ayrı not düşülür.
 
 #### 3.1.6 Servis / Endpoint Çağrıları (mwbackend Koordinasyonu)
 
 > Android doğrudan MCS çağırmaz. Endpoint sözleşmesi `architect-backend.md` Bölüm 3.x'te.
 
-| Endpoint (mwbackend) | Android Repository Metodu | Request DTO | Response DTO |
-|----------------------|---------------------------|-------------|---------------|
-| `POST /api/{{kebab-konu}}` | `{{Repo}}.create(req)` | `{{Konu}}CreateRequest` | `{{Konu}}CreateResponse` |
-| `GET /api/{{kebab-konu}}` | `{{Repo}}.list()` | — | `{{Konu}}ListResponse` |
-| `PUT /api/{{kebab-konu}}/{id}` | `{{Repo}}.update(id, req)` | `{{Konu}}UpdateRequest` | `{{Konu}}UpdateResponse` |
-| `DELETE /api/{{kebab-konu}}/{id}` | `{{Repo}}.delete(id)` | — | `{{Konu}}DeleteResponse` |
+| Endpoint (mwbackend) | Android Repository Metodu | Request DTO | Response DTO | Tetiklendiği Yer |
+|----------------------|---------------------------|-------------|---------------|-------------------|
+| `POST /api/{{kebab-konu}}` | `{{Repo}}.create(req)` | `{{Konu}}CreateRequest` | `{{Konu}}CreateResponse` | {{Buton / lifecycle}} |
+| `GET /api/{{kebab-konu}}` | `{{Repo}}.list()` | — | `{{Konu}}ListResponse` | `onResume` |
+| `PUT /api/{{kebab-konu}}/{id}` | `{{Repo}}.update(id, req)` | `{{Konu}}UpdateRequest` | `{{Konu}}UpdateResponse` | {{...}} |
+| `DELETE /api/{{kebab-konu}}/{id}` | `{{Repo}}.delete(id)` | — | `{{Konu}}DeleteResponse` | {{...}} |
+
+**Parametre Eşleme — Request ([B16.2] ZORUNLU, her çağrı için):**
+
+> Backend `architect-backend.md` 3.x.3 Input tablosuyla birebir senkron.
+
+| Endpoint Input Alanı | Tip | Android Kaynağı (UI alanı / state) | Not |
+|----------------------|-----|-------------------------------------|-----|
+| `{{alan1}}` | string | `{{bottomSheet}}` seçimi → `viewModel.{{prop}}` | {{validasyon}} |
+| `{{alan2}}` | decimal | `binding.{{editText}}.text` → parse | > 0 kontrolü client'ta da |
+
+**Output Kullanımı — Response ([B16.2] ZORUNLU):**
+
+| Endpoint Output Alanı | Tip | Android Kullanım Yeri | Hata/Boş Durum |
+|------------------------|-----|------------------------|------------------|
+| `{{liste[]}}` | `List<{{Item}}>` | `RecyclerView` adapter | Boş → empty state komponenti |
+| `resourceKeys` / `resultMessageKey` | map / string | 3.1.5 tablosu | — |
 
 ```kotlin
 interface CurrencyAlarmApi {
@@ -252,7 +268,7 @@ if (BuildConfig.VERSION_CODE < {{MIN_BUILD_ANDROID}}) {
 
 ### 3.2 — 4.1.{{M}} {{İşlev Adı}}
 
-> Yukarıdaki 11 alt başlık şablonu her 4.1.X için tekrarlanır.
+> Yukarıdaki alt başlık şablonu (3.1.0 – 3.1.11) her 4.1.X için **TAM olarak** tekrarlanır — kısaltma YASAK ([B16.3]). Ortak nokta varsa "3.1.X ile aynı, fark: ..." şeklinde somut referans verilir; parametre eşleme ve resource key tabloları her işlev için yine ayrı yazılır.
 
 ---
 
@@ -260,7 +276,7 @@ if (BuildConfig.VERSION_CODE < {{MIN_BUILD_ANDROID}}) {
 
 | Konu | Dosya | Değişiklik |
 |------|-------|------------|
-| `strings.xml` (tr / en / ar) | `res/values*/strings.xml` | {{N}} yeni key |
+| Resource key'ler (tr / en / ar) | `VpStringResource` ChannelID=10 (mobile-05 script) — backend endpoint output'unda döner | {{N}} yeni key |
 | Retrofit interface base | `android/core/network/{{ApiBase}}.kt` | (varsa) endpoint base url / interceptor |
 | Hilt module | `android/app/.../di/{{Module}}.kt` | Yeni Repository / Service binding |
 | Manifest | `android/app/src/main/AndroidManifest.xml` | (varsa) deep link / izin |

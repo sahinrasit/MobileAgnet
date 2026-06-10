@@ -17,9 +17,9 @@
 1. Genel Özet ve Hedef
 2. Doküman Haritası (Hangi Developer Hangi Dosyayı Okur)
 3. Etki Özeti (SDLC 3.4'ten)
-4. Yazılım İşlevleri Listesi (4.1.X)
+4. Yazılım İşlevleri Listesi (4.1.X) + Gereksinim → İmplementasyon İzlenebilirlik Matrisi
 5. Cross-Platform REST Endpoint Matrisi
-6. Resource Key Haritası (3 platform senkron)
+6. Resource Key Haritası — Tam Envanter (3 platform senkron, Figma kaynaklı)
 7. Loglama Event Sözlüğü (snake_case — 3 platform aynı)
 8. Pilot ve MinBuildNumber Konfigürasyonu
 9. Sprint Koordinasyon Sırası
@@ -79,6 +79,16 @@
 
 > Her satır, ilgili platform dokümanında detaylı 3.1 alt başlığa link verir (yerel dosya içi link).
 
+### 4.1 Gereksinim → İmplementasyon İzlenebilirlik Matrisi ([B16.3])
+
+> SDLC Bölüm 4'teki **her gereksinim** için tam zincir. Boş hücre kalamaz; uygulanamıyorsa "—" + gerekçe.
+
+| SDLC Gereksinim | Endpoint(ler) | Backend Class'lar (Controller/Handler/UseCase/Service) | MCS TXN | iOS Service Metodu | Android Repository Metodu | Resource Key'ler |
+|------------------|----------------|----------------------------------------------------------|---------|---------------------|----------------------------|-------------------|
+| 4.1.1 {{İşlev}} | `{{method route}}` | `{{C}}Controller.{{Action}}`, `{{H}}Handler`, `{{U}}UseCase`, `{{S}}Service` | `{{TXN}}` | `{{Service}}.{{metod}}()` | `{{Repo}}.{{metod}}()` | `{{KEY_1}}, {{KEY_2}}` |
+| 4.1.2 {{İşlev}} | ... | ... | ... | ... | ... | ... |
+| 4.3.1 Loglama | — | `[LoggableMethod]` | — | `TrackMobileEvent` | `TrackMobileEvent` | — |
+
 ---
 
 ## 5. Cross-Platform REST Endpoint Matrisi
@@ -100,17 +110,18 @@
 
 ---
 
-## 6. Resource Key Haritası (3 Platform Senkron)
+## 6. Resource Key Haritası — TAM Envanter (3 Platform Senkron)
 
-> SDLC 3.4.5 CMS tablosundan alınmıştır. Üç platformda da **aynı key adı** ile kullanılır.
+> Kaynak: [B3.1] tam key envanteri — **Figma MCP / ekran tasarım görsellerindeki TÜM metinler** (mevcut + yeni) + SDLC 3.4.5. Üç platformda da **aynı key adı** ile kullanılır.
+> **Dağıtım:** Key değerleri client'a **backend endpoint output'unda döner** ([B8]); "Dönen Endpoint" kolonu zorunludur.
 
-| ResourceKey | tr-TR | en-US | ar-SA | iOS Kullanım | Android Kullanım | Backend Kullanım |
-|-------------|-------|-------|-------|----------------|-------------------|-------------------|
-| `{{KEY_1}}` | {{TR}} | {{EN veya [ÇEVİRİ GEREKLİ]}} | {{AR}} | `Localizable.strings` → `viewController.label.text` | `R.string.{{snake_case}}` → `binding.tv.text` | (varsa) BusinessException message |
-| `{{KEY_2}}` | {{TR}} | {{EN}} | {{AR}} | Alert message | AlertDialog message | — |
-| `{{KEY_3}}` | {{TR}} | {{EN}} | {{AR}} | Toast | Toast.makeText | — |
+| ResourceKey | Durum | Kaynak (Figma ekran/komponent) | tr-TR | en-US | ar-SA | Dönen Endpoint / Response Alanı | iOS Kullanım | Android Kullanım |
+|-------------|-------|--------------------------------|-------|-------|-------|----------------------------------|----------------|-------------------|
+| `{{KEY_1}}` | yeni | {{Ekran}} / başlık | {{TR}} | {{EN veya [ÇEVİRİ GEREKLİ]}} | {{AR}} | `GET /api/{{kebab}}` → `resourceKeys` | `titleLabel.text` | `binding.tvTitle.text` |
+| `{{KEY_2}}` | yeni | {{Ekran}} / hata popup | {{TR}} | {{EN}} | {{AR}} | `BusinessException.MessageKey` | Alert message | AlertDialog message |
+| `{{KEY_3}}` | mevcut | {{Ekran}} / toast | {{TR}} | {{EN}} | {{AR}} | `{{endpoint}}` → `resultMessageKey` | Toast | Toast.makeText |
 
-> [ÇEVİRİ GEREKLİ] satırlar `VpStringResource` `mobile-05` INSERT script'inde çeviri ekibi tarafından doldurulur.
+> [ÇEVİRİ GEREKLİ] satırlar `VpStringResource` `mobile-05` INSERT script'inde çeviri ekibi tarafından doldurulur. Ekran tasarımında görünüp bu tabloda olmayan metin = [B12] kontrol 15 hatası.
 
 ---
 
@@ -206,8 +217,9 @@ Aşağıdaki maddelerin **hepsi** üç platformda ve cross-platform seviyesinde 
 - Code review + unit test + integration test + TransactionNameConstants + mobile-05 script + VpDefaultLog + backward compat + Swagger ✓
 
 **Cross-Platform DoD:**
-- [ ] Endpoint sözleşmesi 3 platformda birebir aynı (Bölüm 5)
-- [ ] Resource key adları 3 platformda birebir aynı (Bölüm 6)
+- [ ] Endpoint sözleşmesi 3 platformda birebir aynı (Bölüm 5); her endpoint'te Input/Output + Response ResourceKey tabloları dolu ([B16.1])
+- [ ] Resource key adları 3 platformda birebir aynı; ekran tasarımındaki TÜM metinler envanterde (Bölüm 6)
+- [ ] SDLC Bölüm 4'teki her gereksinim izlenebilirlik matrisinde (Bölüm 4.1)
 - [ ] Loglama event adları snake_case ve birebir aynı (Bölüm 7)
 - [ ] PilotKey + ReversePilot 3 platformda aynı davranıyor
 - [ ] UAT integration test 3 platformda da yeşil

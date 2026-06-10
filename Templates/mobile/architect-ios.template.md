@@ -37,7 +37,7 @@
 | `ios/Modules/{{Modul}}/Model/` | DTO + domain model | {{Yeni / Değişen}} |
 | `ios/Modules/{{Modul}}/Service/` | Network layer (mwbackend endpoint client) | {{Yeni / Değişen}} |
 | `ios/Modules/{{Modul}}/Coordinator/` | Navigation | {{Yeni / Değişen}} |
-| `ios/Localization/Localizable.strings` (tr/en/ar) | Resource key değerleri | Değişen |
+| `ios/Common/Resources/ResourceManager.swift` | Resource key okuma (backend endpoint output — [B8]) | Değişmez (kullanılır) |
 | `ios/Common/PilotManager.swift` | (mevcut) Pilot kontrolü | Değişmez (kullanılır) |
 | `ios/Common/Logging/TrackMobileEvent.swift` | (mevcut) Event log | Değişmez (kullanılır) |
 
@@ -47,9 +47,13 @@
 
 ## 3. Yapılacak İşler — İşlev Bazında
 
-> Her 4.1.X işlevi için 10 alt başlık. SDLC dokümanındaki 4.1.X iskeleti (8 bölüm) bu teknik bölüme dönüştürülmüştür.
+> Her 4.1.X işlevi için 11 alt başlık (3.1.0 – 3.1.10). SDLC dokümanındaki 4.1.X iskeleti (8 bölüm) bu teknik bölüme dönüştürülmüştür.
 
 ### 3.1 — 4.1.{{N}} {{İşlev Adı}}
+
+#### 3.1.0 Bağlam
+
+> 1-2 paragraf — SDLC 4.1.{{N}} girişinden: bu işlev kullanıcıya ne sağlar, mevcut akışa nasıl eklenir, iOS tarafında hangi ekran/komponentler yapılır ve hangi backend endpoint'i kullanılır.
 
 #### 3.1.1 Mevcut Durum (Semantic-Search Bulgusu)
 
@@ -100,38 +104,51 @@ final class CurrencyAlarmCreateViewController: UIViewController {
 | {{VC}} | `{{outlet1}}` | `UILabel` | {{Hangi metin gösteriliyor}} |
 | {{ViewModel}} | `load{{Data}}()` | `async throws` | mwbackend servisini çağırır |
 
-#### 3.1.4 Resource Key Kullanımı (SDLC 3.4.5 ile Senkron)
+#### 3.1.4 Resource Key Kullanımı ([B8] Envanteri — Bu Ekranın TÜM Key'leri)
 
-> Resource key adları **SDLC 3.4.5 CMS tablosundan birebir** alınır.
+> Kaynak: [B3.1] tam key envanteri (Figma / ekran tasarımı + SDLC). Bu ekranda görünen **her metin** (mevcut + yeni key) bu tabloda yer alır.
+> **Dağıtım modeli:** Resource key değerleri client'a **backend endpoint output'unda döner**; metin lokal dosyadan değil response'tan / ResourceManager'dan okunur.
 
-| ResourceKey | Kullanım Yeri | Çağrı |
-|-------------|----------------|-------|
-| `{{KEY_1}}` | `{{VC}}.{{label}}.text` | `"{{KEY_1}}".localized()` |
-| `{{KEY_2}}` | Popup mesajı | `Alert.show(title:, message: "{{KEY_2}}".localized())` |
-| `{{KEY_3}}` | Toast mesajı | `Toast.show("{{KEY_3}}".localized())` |
-
-**Localizable.strings güncellemesi:**
+| ResourceKey | Durum | Dönen Endpoint / Response Alanı | iOS Kullanım Yeri |
+|-------------|-------|----------------------------------|--------------------|
+| `{{KEY_1}}` | yeni | `GET /api/{{kebab}}` → `resourceKeys` | `{{VC}}.titleLabel.text` |
+| `{{KEY_2}}` | yeni | `POST /api/{{kebab}}` → `BusinessException.MessageKey` | Hata popup mesajı |
+| `{{KEY_3}}` | mevcut | `{{endpoint}}` → `resultMessageKey` | Başarı toast'ı |
 
 ```swift
-// ios/Localization/tr.lproj/Localizable.strings
-"{{KEY_1}}" = "{{TR değer — SDLC 3.4.5'ten}}";
-
-// en.lproj — [ÇEVİRİ GEREKLİ] olanlar VpStringResource senkronundan sonra çekilir
-// ar.lproj — aynı
+// Response'tan key okuma — örnek
+let title = response.resourceKeys["{{KEY_1}}"]
+toastView.show(message: response.resultMessage)   // backend resultMessageKey değerini döner
 ```
 
-> Yeni key'ler `mobile-05-write-implementation-scripts` tarafından `VpStringResource` INSERT'i ile DB'ye atılır.
+> Yeni key'ler `mobile-05-write-implementation-scripts` tarafından `VpStringResource` (ChannelID=10) INSERT'i ile DB'ye atılır; backend bunları endpoint output'una koyar. Codebase keşfi lokal bundle (Localizable.strings) kullanımını **kanıtlarsa** ilgili key satırına ayrı not düşülür.
 
 #### 3.1.5 Servis / Endpoint Çağrıları (mwbackend Koordinasyonu)
 
 > iOS doğrudan MCS çağırmaz; mwbackend endpoint'ini çağırır. Endpoint sözleşmesi `architect-backend.md` Bölüm 3.x'te tanımlıdır.
 
-| Endpoint (mwbackend) | iOS Service Metodu | Request DTO | Response DTO |
-|----------------------|---------------------|-------------|---------------|
-| `POST /api/{{kebab-konu}}` | `{{Service}}.create(req:)` | `{{Konu}}CreateRequest` | `{{Konu}}CreateResponse` |
-| `GET /api/{{kebab-konu}}` | `{{Service}}.list()` | — | `{{Konu}}ListResponse` |
-| `PUT /api/{{kebab-konu}}/{id}` | `{{Service}}.update(id:req:)` | `{{Konu}}UpdateRequest` | `{{Konu}}UpdateResponse` |
-| `DELETE /api/{{kebab-konu}}/{id}` | `{{Service}}.delete(id:)` | — | `{{Konu}}DeleteResponse` |
+| Endpoint (mwbackend) | iOS Service Metodu | Request DTO | Response DTO | Tetiklendiği Yer |
+|----------------------|---------------------|-------------|---------------|-------------------|
+| `POST /api/{{kebab-konu}}` | `{{Service}}.create(req:)` | `{{Konu}}CreateRequest` | `{{Konu}}CreateResponse` | {{Buton / lifecycle}} |
+| `GET /api/{{kebab-konu}}` | `{{Service}}.list()` | — | `{{Konu}}ListResponse` | `viewWillAppear` |
+| `PUT /api/{{kebab-konu}}/{id}` | `{{Service}}.update(id:req:)` | `{{Konu}}UpdateRequest` | `{{Konu}}UpdateResponse` | {{...}} |
+| `DELETE /api/{{kebab-konu}}/{id}` | `{{Service}}.delete(id:)` | — | `{{Konu}}DeleteResponse` | {{...}} |
+
+**Parametre Eşleme — Request ([B16.2] ZORUNLU, her çağrı için):**
+
+> Backend `architect-backend.md` 3.x.3 Input tablosuyla birebir senkron.
+
+| Endpoint Input Alanı | Tip | iOS Kaynağı (UI alanı / state) | Not |
+|----------------------|-----|--------------------------------|-----|
+| `{{alan1}}` | string | `{{picker}}` seçimi → `viewModel.{{prop}}` | {{validasyon}} |
+| `{{alan2}}` | decimal | `{{textField}}.text` → parse | > 0 kontrolü client'ta da |
+
+**Output Kullanımı — Response ([B16.2] ZORUNLU):**
+
+| Endpoint Output Alanı | Tip | iOS Kullanım Yeri | Hata/Boş Durum |
+|------------------------|-----|--------------------|------------------|
+| `{{liste[]}}` | `[{{Item}}]` | `tableView` datasource | Boş → empty state komponenti |
+| `resourceKeys` / `resultMessageKey` | dict / string | 3.1.4 tablosu | — |
 
 ```swift
 // Service örneği
@@ -237,7 +254,7 @@ guard AppInfo.buildNumber >= {{MIN_BUILD_IOS}} else {
 
 ### 3.2 — 4.1.{{M}} {{İşlev Adı}}
 
-> Yukarıdaki 10 alt başlık şablonu her 4.1.X için tekrarlanır.
+> Yukarıdaki alt başlık şablonu (3.1.0 – 3.1.10) her 4.1.X için **TAM olarak** tekrarlanır — kısaltma YASAK ([B16.3]). Ortak nokta varsa "3.1.X ile aynı, fark: ..." şeklinde somut referans verilir; parametre eşleme ve resource key tabloları her işlev için yine ayrı yazılır.
 
 ---
 
@@ -245,7 +262,7 @@ guard AppInfo.buildNumber >= {{MIN_BUILD_IOS}} else {
 
 | Konu | Dosya | Değişiklik |
 |------|-------|------------|
-| Localizable.strings (tr/en/ar) | `ios/Localization/*.lproj/Localizable.strings` | {{N}} yeni key |
+| Resource key'ler (tr/en/ar) | `VpStringResource` ChannelID=10 (mobile-05 script) — backend endpoint output'unda döner | {{N}} yeni key |
 | Network layer base | `ios/Common/Network/APIClient.swift` | (varsa) endpoint base url / interceptor değişikliği |
 | ResourceManager | `ios/Common/Resources/ResourceManager.swift` | (varsa) yeni key cache |
 | AppDelegate / SceneDelegate | `ios/App/SceneDelegate.swift` | (varsa) deep link handler |

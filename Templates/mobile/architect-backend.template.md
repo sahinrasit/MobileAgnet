@@ -48,6 +48,10 @@
 
 ### 3.1 — 4.1.{{N}} {{İşlev Adı}}
 
+#### 3.1.0 Bağlam
+
+> 1-2 paragraf — SDLC 4.1.{{N}} girişinden: bu işlev kullanıcıya ne sağlar, mevcut akışa nasıl eklenir, backend'in bu işlevdeki rolü nedir. Örnek: "Bu işlev, kullanıcıya alarm tanımı oluşturma yeteneği sağlar. Mevcut akışın içine yeni alarm kurma ekranı eklenerek döviz çifti seçimi, hedef kur belirleme ve alarm bitiş tarihi yönetimi sunulur. Backend bu ekran için {{endpoint}} endpoint'ini açar ve {{TXN}} MCS servisini çağırır."
+
 #### 3.1.1 Mevcut Durum (Semantic-Search Bulgusu)
 
 | Mevcut Bileşen | Konum | Not |
@@ -72,6 +76,7 @@
 #### 3.1.3 REST Endpoint Tanımı (Client Sözleşmesi)
 
 > iOS / Android client'ların çağıracağı endpoint sözleşmesi. `architect-ios.md` ve `architect-android.md` ile **birebir** senkron olmalıdır.
+> **[B16.1] ZORUNLU:** Aşağıdaki üç tablo (Input / Output / Response ResourceKey) **her endpoint için ayrı ayrı** doldurulur; tek satırlık endpoint tanımı YETERSİZDİR.
 
 | Endpoint | Method | Handler | Request | Response | Auth |
 |----------|--------|---------|---------|----------|------|
@@ -79,6 +84,32 @@
 | `/api/{{kebab-konu}}` | GET | `{{Adi}}Controller.List` | (query params) | `{{Adi}}ListResponse` | Mobile Auth |
 | `/api/{{kebab-konu}}/{id}` | PUT | `{{Adi}}Controller.Update` | `{{Adi}}UpdateRequest` | `{{Adi}}UpdateResponse` | Mobile Auth |
 | `/api/{{kebab-konu}}/{id}` | DELETE | `{{Adi}}Controller.Delete` | — | `{{Adi}}DeleteResponse` | Mobile Auth |
+
+**Endpoint Input — `{{Adi}}CreateRequest` (her endpoint için tekrarla):**
+
+| Alan | Tip | Zorunlu | Kaynak (client) | Açıklama / Validasyon |
+|------|-----|---------|------------------|------------------------|
+| `{{alan1}}` | string | Evet | {{Ekran}} → {{form alanı}} | {{kural}} |
+| `{{alan2}}` | decimal | Evet | {{form alanı}} | > 0 |
+| `CustomerNo` | string | — | Session (client göndermez) | Handler session'dan alır |
+
+**Endpoint Output — `{{Adi}}CreateResponse` (client'a dönen her alan):**
+
+| Alan | Tip | Açıklama | Client Kullanımı |
+|------|-----|----------|-------------------|
+| `{{alan3}}` | string | {{açıklama}} | {{hangi ekran/komponent}} |
+| `{{liste[]}}` | `List<{{Item}}>` | {{açıklama}} | Liste ekranı |
+| `resourceKeys` | `Dictionary<string,string>` | Ekranda gösterilecek metinler ([B8]) | Aşağıdaki tablo |
+
+**Response'ta Dönen ResourceKey'ler ([B8] — ZORUNLU):**
+
+> Resource key'ler client'a bu endpoint'in output'unda döner; client metinleri buradan okur.
+
+| ResourceKey | Taşıyan Response Alanı | Durum (mevcut/yeni) | Kullanım (client) |
+|-------------|------------------------|----------------------|--------------------|
+| `{{KEY_1}}` | `resourceKeys` / `{{alan}}` | {{mevcut/yeni}} | Ekran başlığı |
+| `{{KEY_SUCCESS}}` | `resultMessageKey` | yeni | Başarı toast'ı |
+| `{{KEY_ERROR_X}}` | `BusinessException.MessageKey` | yeni | Hata popup'ı (ActionType {{N}}) |
 
 ```csharp
 [ApiController]
@@ -272,7 +303,7 @@ public class {{Adi}}Helper
 
 ### 3.2 — 4.1.{{M}} {{İşlev Adı}}
 
-> Yukarıdaki 11 alt başlık şablonu her 4.1.X için tekrarlanır.
+> Yukarıdaki alt başlık şablonu (3.1.0 – 3.1.11) her 4.1.X için **TAM olarak** tekrarlanır — kısaltma YASAK ([B16.3]). Ortak nokta varsa "3.1.X ile aynı, fark: ..." şeklinde somut referans verilir; Input/Output/ResourceKey tabloları her endpoint için yine ayrı yazılır.
 
 ---
 
