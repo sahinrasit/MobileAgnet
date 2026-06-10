@@ -50,7 +50,7 @@ Sırasıyla `Read`:
 10. `Agent/mobile/_common-rules/14-quality-gate.md`
 11. `Agent/mobile/_common-rules/15-db-reference.md` (tablo şemaları)
 
-Ardından bu agent dosyasındaki **[B0] – [B12] kurallarını** uygula.
+Ardından bu agent dosyasındaki **[B0] – [B15] kurallarını** uygula — özellikle **[B13] Context Yönetimi**, **[B14] Derin Teknik Analiz** ve **[B15] Quality Gate**.
 
 ---
 
@@ -288,8 +288,121 @@ SDLC 4.3.1'deki **somut event listesi** her platform dokümanında implementasyo
 | 8 | Loglama event ismi tutarlılığı | 3 platformda aynı event aynı snake_case isimle |
 | 9 | DoD bütünlüğü | Her platform dokümanı kendi DoD bölümünü içeriyor + index'te master DoD listesi |
 | 10 | Index ↔ platform dokümanları | Index'teki endpoint matris / resource key haritası platform dokümanlarıyla %100 senkron |
+| 11 | **Referans implementasyon zinciri** ([B14.1]) | Her 4.1.X'in "Mevcut durum" bölümünde emsal zincir (veya "emsal bulunamadı" notu) var; yeni dosya önerileri zincire dayandırılmış |
+| 12 | **Callers / regresyon tablosu** ([B14.2]) | Değiştirilen her mevcut dosya/method için çağıran listesi + regresyon riski satırı mevcut |
+| 13 | **Hata ve edge-case implementasyonu** ([B14.3]) | SDLC'deki her hata/boş/timeout/sınır senaryosunun platform karşılığı (handler/state/komponent) yazılı |
+| 14 | **[BELIRSIZ] oranı eşiği** | Bir platform dokümanında `[BELIRSIZ]` etiketli teknik öğe oranı >%20 ise kullanıcıya açıkça raporlanır ("keşif yetersiz — şu aramalar başarısız oldu") |
 
 Tutarsızlık → düzelt veya `[ACIK]` işaretle.
+
+---
+
+## [B13] CONTEXT YÖNETİMİ (Bu agent için kritik)
+
+> Bu agent büyük bir SDLC dokümanını okur, 5 repo cluster + 7 DB tablosunda keşif yapar ve 4 ayrı doküman üretir. Plansız çalışıldığında context, ham kod ve tablo dökümleriyle dolar ve son platform dokümanının kalitesi düşer. Kurallar:
+
+### [B13.1] SDLC'yi Tam Okuma — Digest-First
+
+- Önce `docs/.mobile-00-summary.json` + `docs/.mobile-00-kaynak-ozet.json` okunur; `.architect-context.json` bunlardan kurulur.
+- SDLC dokümanından yalnızca **o an işlenen 4.1.X bölümü** okunur: Grep ile başlık satırı bulunur → line-range Read. Parçalı SDLC'de (`docs/mobile-sdlc-analiz/4.1.X-*.md`) yalnızca ilgili parça dosyası okunur.
+- SDLC'nin tamamı hiçbir adımda tek seferde context'e yüklenmez; 3.4.5 CMS tablosu gibi çapraz bölümler bir kez okunup `.architect-context.json`'a işlenir.
+
+### [B13.2] Platform-Başına Bağımsız Üretim Turu
+
+- Her platform dokümanı (iOS / Android / Backend) **ayrı üretim turunda** yazılır. Turlar arası taşınan TEK bağlam: `.architect-context.json` + `.architect-codebase-cache.json` + rolling summary.
+- Daha önce üretilmiş platform dokümanının **tam metni context'e geri yüklenmez**; cross-platform senkron veriler (endpoint, resource key, pilot, event adları) her zaman `.architect-context.json`'dan okunur — bu dosya senkronun tek kaynağıdır.
+- Index dokümanı en son, yalnızca context.json + her platformun rolling summary'sinden üretilir.
+
+### [B13.3] Keşifte Subagent Fan-Out
+
+- [B3] codebase keşfi repo cluster başına **paralel Task/Explore subagent'leriyle** yapılır (mwbackend + ios + android + MCSVeribranchBI + smg aynı mesajda başlatılır).
+- Subagent prompt'unda dönüş şeması açıkça belirtilir: **ham kod DÖNMEZ**; yalnızca yapısal bulgu döner — `{ "path": "...", "class": "...", "onemli_methodlar": ["imza — 1 satır sorumluluk"], "cagiranlar": [...], "pattern_notu": "..." }`.
+- Dönen bulgular `docs/.architect-codebase-cache.json`'a yazılır; ana agent üretimde yalnızca cache'ten çalışır. Tekil/küçük aramalar (1-2 sorgu) için subagent açılmaz.
+
+### [B13.4] Arama Bütçesi (Search Bounding)
+
+- İşlev × repo başına hedef **≤ 3 semantic-search sorgusu**; önce dar `limit` ile path listesi, sonra en fazla **5 dosyaya** derinleşme.
+- Her sorgudan önce cache kontrol edilir (aynı 4.1.X + repo varsa tekrar aranmaz).
+- 3 sorguda bulunamadıysa: sorgu somutlaştırılır (class adı/TransactionName cümle içinde) ve **1 ek deneme** yapılır; yine yoksa `[BELIRSIZ — mevcut modül yapısı doğrulanacak]` ([B7]) yazılır, arama döngüsüne girilmez.
+
+### [B13.5] Rolling Summary
+
+- Her platform turu ve her 4.1.X bölümü sonunda 5-10 satırlık özet `docs/.architect-rolling-summary.md`'ye yazılır (modül 12 [C19.5] formatı): üretilen bölümler, kararlar, [BELIRSIZ] sayısı.
+- Sonraki tur/bölüm yalnızca rolling summary + context.json + ilgili cache parçasını okur.
+
+### [B13.6] Lazy Template Okuma
+
+- Her template bir kez, iskelet kurulurken okunur; üretim sırasında gerekirse yalnızca ilgili bölümü line-range Read edilir. 4 template'in tamamı aynı anda context'te tutulmaz.
+
+---
+
+## [B14] DERİN TEKNİK ANALİZ (Developer'ın Sormadan Kodlayabilmesi)
+
+> [B7] path doğruluğunu garanti eder; [B14] dokümanın **derinliğini** garanti eder. Hedef: developer'ın "peki bunu nasıl yapacağım, neresi bozulur?" diye geri dönmemesi. Tüm derinlik kanıt-dayanaklıdır ([B2]); keşifle bulunamayan detay uydurulmaz, `[BELIRSIZ]` etiketlenir.
+
+### [B14.1] Referans İmplementasyon Zinciri (Pattern Mining)
+
+- Her 4.1.X için codebase'deki **en benzer mevcut feature**'ın uçtan uca katman zinciri çıkarılır ([B13.3] subagent ile):
+  - iOS: `{{Emsal}}ViewController → {{Emsal}}ViewModel → {{Emsal}}Service → NetworkLayer`
+  - Android: `{{Emsal}}Fragment → {{Emsal}}ViewModel → {{Emsal}}Repository → ApiService`
+  - Backend: `{{Emsal}}Controller → {{Emsal}}Handler → {{Emsal}}UseCase → MCS çağrısı`
+- Zincir, ilgili 4.1.X "Mevcut durum" bölümüne (3.1.1) **dosya yollarıyla** yazılır; yeni dosya/sınıf önerileri ([B7]) bu zincirin kalıbına göre türetilir ("emsal nasıl yapmışsa öyle").
+- Emsalden **sapılan her nokta** gerekçesiyle yazılır (örn. "emsal Combine kullanıyor; bu modül async/await'e geçti — X dosyasındaki güncel pattern esas alındı").
+- Emsal bulunamazsa: "Codebase'de doğrudan emsal zincir tespit edilmedi" + en yakın kısmi örnek.
+
+### [B14.2] Değişiklik Etkisi — Callers / Regresyon Analizi
+
+Mevcut bir dosya/method/servis **değiştiriliyorsa** (yalnızca yeni ekleme değilse), her platform dokümanında zorunlu tablo:
+
+| Değiştirilen | Çağıranlar (semantic-search bulgusu) | Davranış Değişikliği | Regresyon Riski | Önerilen Test |
+|--------------|----------------------------------------|----------------------|------------------|----------------|
+| `{{path/Method}}` | `{{çağıran dosya listesi}}` | response'a alan eklendi / imza değişti / davranış değişti | Düşük/Orta/Yüksek + neden | TC-MOB-{{N}} |
+
+- Çağıran listesi keşifle doğrulanır; bulunamadıysa `[BELIRSIZ — caller taraması tamamlanamadı]` (sessizce "risk yok" YAZILMAZ).
+- Mevcut servis sözleşmesi değişiyorsa diğer kanal (IB/ATM/Web) etkisi SDLC [A17.2]'den taşınır ve backend dokümanında açıkça yer alır.
+
+### [B14.3] Hata ve Edge-Case İmplementasyonu
+
+SDLC 4.1.X madde 7'deki her senaryonun (servis hatası / boş yanıt / timeout / maks sınır / eski client) **platform karşılığı** yazılır:
+
+- Hangi error handler / hata state'i / komponent devreye girer (mevcut error handling pattern'i emsalden ([B14.1]) tespit edilir; uydurma handler adı YASAK).
+- Boş durum (empty state) komponenti + retry davranışı; timeout'ta kullanılan mevcut network policy.
+- Üç platformda **aynı senaryo aynı kullanıcı sonucunu** vermeli; farklılık zorunluysa index'te "platform farkları" tablosuna yazılır.
+
+### [B14.4] Method Düzeyi Pseudocode
+
+- Önerilen her yeni **public method** için: imza + 1 satır sorumluluk + 3-7 satırlık pseudocode (çağrı sırası: validasyon → servis → state güncelleme → log).
+- Pseudocode emsal zincirdeki ([B14.1]) gerçek akıştan türetilir; private helper detayına inilmez (o developer'ın işi).
+
+### [B14.5] Performans / Threading Notları (Kanıt-Dayanaklı)
+
+- Yalnızca codebase'de **gözlemlenen** pattern'lere dayanan notlar yazılır: main-thread UI güncelleme kuralı, mevcut liste ekranlarında pagination/cache kullanımı, mevcut TTL/refresh politikası.
+- Gözleme dayanmayan genel-geçer optimizasyon önerisi ("cache eklenebilir" gibi) YAZILMAZ; ihtiyaç görülüyorsa "teknik tasarımda değerlendirilecek" notuyla `[ACIK]` işaretlenir.
+
+---
+
+## [B15] QUALITY GATE + BAĞIMSIZ DOĞRULAMA
+
+### [B15.1] Architect Quality Gate (modül 14 [C21] formatında)
+
+Sunum öncesi `docs/.architect-completeness.md` üretilir; kriterler:
+
+| Kriter | Minimum | Hata Davranışı |
+|--------|---------|-----------------|
+| Her seçili platformda her 4.1.X bölümü mevcut | %100 | Eksik bölüm yazılır |
+| Her yeni TransactionName için DDD zinciri + Request/Response modeli dolu | %100 | C17 keşfine geri dön |
+| Dosya yollarının kaynak-doğrulanma oranı | ≥ %80 (gerisi `[BELIRSIZ]` etiketli) | <%80 ise kullanıcıya keşif eksikliği raporlanır |
+| Resource key senkronu (SDLC 3.4.5 ↔ 3 platform) | %100 | Eksik key eklenir |
+| Değiştirilen mevcut öğeler için [B14.2] regresyon tablosu | %100 | Caller taraması yapılır veya [BELIRSIZ] |
+| Her platformda DoD bölümü | %100 | Eksik DoD yazılır |
+
+Skor < %75 → kullanıcıya AskUserQuestion: "devam / eksikleri tamamla / durdur" (modül 14 [C21.3] mantığı).
+
+### [B15.2] Bağımsız Doğrulama Subagent'i — VARSAYILAN AÇIK
+
+- Self-review ([B12]) sonrası bir doğrulama subagent'i (Task) **temiz context'te** 4 dokümanı okur ve şunu denetler: "Uydurma path/class/method var mı (cache'te karşılığı olmayan)? Endpoint/resource key/pilot değerleri 4 dokümanda birebir senkron mu? Regresyon tabloları ve hata senaryosu karşılıkları eksik mi? Şüpheci oku; her bulguya dosya + bölüm referansı ekle."
+- Bulgular `docs/architect/.review.md`'ye işlenir; kritik bulgu (uydurma path, senkron kırığı) düzeltilmeden sunum yapılmaz.
+- **İstisna:** Tek platform + tek işlev gibi çok küçük kapsamda kullanıcı onayıyla atlanabilir; varsayılan "çalıştır".
 
 ---
 
@@ -308,9 +421,9 @@ Tutarsızlık → düzelt veya `[ACIK]` işaretle.
 
 AskUserQuestion ile iOS / Android / Backend (multi-select).
 
-### Adım 2: Bağlam Yükleme ([B2])
+### Adım 2: Bağlam Yükleme ([B2] + [B13.1])
 
-SDLC dokümanı + summary JSON'dan veri çıkarımı; özet `docs/.architect-context.json`'a yazılır:
+Digest-first: önce summary/kaynak-özet JSON'ları; SDLC'den yalnızca ilgili 4.1.X bölümleri line-range Read. Özet `docs/.architect-context.json`'a yazılır:
 
 ```json
 {
@@ -333,23 +446,28 @@ SDLC dokümanı + summary JSON'dan veri çıkarımı; özet `docs/.architect-con
 }
 ```
 
-### Adım 3: Codebase + DB Keşfi ([B3] + [B4])
+### Adım 3: Codebase + DB Keşfi ([B3] + [B4] + [B13.3] + [B13.4])
 
-Her 4.1.X için seçilen platformlar üzerinden semantic-search; sonuçlar cache'e yazılır. DB keşfi paralel.
+- Repo cluster başına **paralel subagent fan-out** ([B13.3]); yalnızca yapısal bulgu döner, cache'e yazılır.
+- Bu keşifte her 4.1.X için **emsal zincir** ([B14.1]) ve değiştirilen öğelerin **caller listesi** ([B14.2]) de çıkarılır.
+- Arama bütçesi [B13.4]; DB keşfi paralel, sonuçlar digest'e.
 
-### Adım 4: Dokümanları Oluştur ([B5] + [B6])
+### Adım 4: Dokümanları Oluştur ([B5] + [B6] + [B13.2] + [B14])
 
 Template'lerden 4 dosyayı `docs/architect/` altında oluştur:
 
 1. `Read` `Templates/mobile/architect-index.template.md` → `Write` `docs/architect/architect-index.md` (iskelet).
 2. Seçilen her platform için template'i `Read` → ilgili dosyayı `Write` (iskelet).
-3. Her 4.1.X için [B6] iskeletini doldur — codebase keşfi sonuçları + SDLC bilgisi ile.
+3. Her platform **ayrı üretim turunda** ([B13.2]); her 4.1.X için [B6] iskeleti doldurulurken [B14] derinlik disiplinleri uygulanır: emsal zincir (3.1.1), regresyon tablosu, hata/edge-case karşılıkları, method pseudocode.
+4. Her tur/bölüm sonunda rolling summary güncellenir ([B13.5]). Index en son, context.json + rolling summary'lerden üretilir.
 
 > Çok işlev varsa (3+): her 4.1.X için ayrı **alt context**ta üret (mobile-00 [A5.3] benzeri). Tek bir platform dokümanı 2500 satırı geçerse — index'te alt bağlantı kullanarak işlev başına ayır.
 
-### Adım 5: Cross-Reference + Self-Review ([B12])
+### Adım 5: Cross-Reference + Self-Review + Quality Gate ([B12] + [B15])
 
-10 kontrolü uygula; bulguları `docs/architect/.review.md` rapor olarak yaz.
+1. [B12] 14 kontrolünü uygula; bulguları `docs/architect/.review.md`'ye yaz.
+2. `docs/.architect-completeness.md` üret ([B15.1]); skor <%75 ise kullanıcıya sor.
+3. Bağımsız doğrulama subagent'ini çalıştır ([B15.2]); kritik bulgular düzeltilmeden sunma.
 
 ### Adım 6: Sunum + Handoff
 
@@ -372,10 +490,12 @@ Template'lerden 4 dosyayı `docs/architect/` altında oluştur:
 | `docs/architect/architect-ios.md` | iOS dosya/sınıf/method/resource/endpoint/log detayı | iOS developer |
 | `docs/architect/architect-android.md` | Android (Google + Huawei) dosya/sınıf/method/resource/endpoint/log detayı | Android developer |
 | `docs/architect/architect-backend.md` | mwbackend DDD katman + MCS TransactionName + REST endpoint + DB özet | mwbackend developer |
-| `docs/architect/.review.md` | Self-review bulguları + [BELIRSIZ] listesi | Tech lead |
+| `docs/architect/.review.md` | Self-review + bağımsız doğrulama ([B15.2]) bulguları + [BELIRSIZ] listesi | Tech lead |
+| `docs/.architect-completeness.md` | Quality gate skoru + eksik/belirsiz listesi ([B15.1]) | Tech lead + orchestrator |
 | `docs/.architect-state.json` | İlerleme + cache | Agent (kendi) |
-| `docs/.architect-codebase-cache.json` | semantic-search bulgu cache | Agent (kendi) |
-| `docs/.architect-context.json` | SDLC'den çıkarılan yapılandırılmış bağlam | Agent (kendi) |
+| `docs/.architect-codebase-cache.json` | semantic-search + subagent bulgu cache ([B13.3]) | Agent (kendi) |
+| `docs/.architect-context.json` | SDLC'den çıkarılan yapılandırılmış bağlam — cross-platform senkronun tek kaynağı ([B13.2]) | Agent (kendi) |
+| `docs/.architect-rolling-summary.md` | Tur/bölüm özetleri ([B13.5]) | Agent (kendi) |
 
 ---
 
